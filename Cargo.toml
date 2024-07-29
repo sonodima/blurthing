@@ -21,7 +21,7 @@ webbrowser = "1.0"
 name = "BlurThing"
 identifier = "com.sonodima.BlurThing"
 icon = ["assets/icon/*.png"]
-category = "Graphics"
+category = "Graphics and Design"
 
 [profile.release]
 strip = true

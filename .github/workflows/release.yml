@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish:
-    name: Build ${{ matrix.target }}
+    name: Build - ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -30,3 +30,23 @@ jobs:
 
       - name: Install Additional Tools
         run: cargo install cargo-bundle
+
+      - name: Build
+        run: cargo bundle --release --target ${{ matrix.target }}
+
+      - name: Package
+        run: |
+          cd target/${{ matrix.target }}/release/bundle
+          mkdir -p dist
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            mv msi/*.msi dist
+          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+            mv osx/*.app dist
+          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            mv -t deb/*.deb rpm/*.rpm dist
+          fi
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/${{ matrix.target }}/release/bundle/dist/*
