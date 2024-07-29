@@ -2,7 +2,7 @@
     <img src="assets/demo.gif" alt="Application demo" width="80%" />
     <div style="margin-top: 24px; margin-bottom: 24;">
         <h1>BlurThing 🌄</h1>
-        <span>Simple application for generating and customizing <a href="https://blurha.s">
+        <span>Simple application for generating and customizing <a href="https://blurha.sh">
             BlurHashes</a> from<br/>images, with extensive controls for
             image manipulation.</span>
     </div>
