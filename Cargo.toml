@@ -1,6 +1,6 @@
 [package]
 name = "blurthing"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 authors = ["Tommaso Dimatore <sonodimaa@icloud.com>"]
 description = "Simplify the process of computing BlurHashes from images."
@@ -14,6 +14,7 @@ blurhash = "0.2"
 iced = { version = "0.12", features = ["image"] }
 image = "0.25"
 native-dialog = "0.7"
+undo = "0.51.0"
 webbrowser = "1.0"
 
 [package.metadata.bundle]

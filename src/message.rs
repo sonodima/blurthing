@@ -9,6 +9,10 @@ pub enum Message {
     CopyHashToClipboard,
     OpenProjectRepo,
 
+    SaveParameters,
+    Undo,
+    Redo,
+
     UpX(u32),
     UpY(u32),
     UpBlur(i32),

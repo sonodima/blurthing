@@ -16,10 +16,10 @@ pub const PREVIEW_SIZE: u32 = 512;
 const IMAGE_DOWNSAMPLE_SIZE: u32 = 128;
 const ALLOWED_EXTENSIONS: [&str; 8] = ["bmp", "gif", "jpg", "jpeg", "png", "tga", "tiff", "webp"];
 
-#[derive(Default)]
 pub struct BlurThing {
     img: Option<(PathBuf, DynamicImage)>,
     computed: Option<(String, DynamicImage)>,
+
     params: Parameters,
 }
 
@@ -29,8 +29,15 @@ impl Application for BlurThing {
     type Message = Message;
     type Theme = Theme;
 
-    fn new(_flags: ()) -> (BlurThing, Command<Self::Message>) {
-        (BlurThing::default(), Command::none())
+    fn new(_flags: ()) -> (Self, Command<Self::Message>) {
+        let instance = Self {
+            img: None,
+            computed: None,
+
+            params: Default::default(),
+        };
+
+        (instance, Command::none())
     }
 
     fn title(&self) -> String {
@@ -63,9 +70,10 @@ impl Application for BlurThing {
                     .extension()
                     .unwrap_or_default()
                     .to_str()
-                    .unwrap_or_default();
+                    .unwrap_or_default()
+                    .to_lowercase();
 
-                if ALLOWED_EXTENSIONS.contains(&extension) {
+                if ALLOWED_EXTENSIONS.contains(&extension.as_str()) {
                     if let Err(e) = self.try_load_image(path) {
                         eprintln!("image load failed: {}", e);
                         _ = MessageDialog::new()
@@ -100,6 +108,10 @@ impl Application for BlurThing {
                 }
             }
 
+            Message::SaveParameters => {}
+            Message::Undo => {}
+            Message::Redo => {}
+
             Message::UpX(x) => {
                 self.params.components.0 = x;
                 self.compute_blurhash_checked();
@@ -132,6 +144,28 @@ impl Application for BlurThing {
         Command::none()
     }
 
+    fn subscription(&self) -> Subscription<Self::Message> {
+        iced::event::listen_with(|event, _| {
+            match event {
+                Event::Window(_, event) => match event {
+                    // Handle file drops in the application window.
+                    iced::window::Event::FileDropped(file) => Some(Message::FileDropped(file)),
+                    _ => None,
+                },
+                Event::Keyboard(event) => match event {
+                    // Handle application hotkeys (when the command / control key is pressed).
+                    iced::keyboard::Event::KeyPressed { key, modifiers, .. }
+                        if modifiers.command() =>
+                    {
+                        Self::handle_hotkey(key, modifiers)
+                    }
+                    _ => None,
+                },
+                _ => None,
+            }
+        })
+    }
+
     fn view(&self) -> Element<Self::Message> {
         let left: Element<Self::Message> = if let Some((_, img)) = &self.computed {
             let buffer = img.to_rgba8().to_vec();
@@ -162,20 +196,27 @@ impl Application for BlurThing {
 
         container(row![left, right]).into()
     }
-
-    fn subscription(&self) -> Subscription<Self::Message> {
-        iced::event::listen_with(|event, _| match event {
-            Event::Window(_, event) => match event {
-                // Handle file drops in the application window.
-                iced::window::Event::FileDropped(file) => Some(Message::FileDropped(file)),
-                _ => None,
-            },
-            _ => None,
-        })
-    }
 }
 
 impl BlurThing {
+    fn handle_hotkey(
+        key: iced::keyboard::Key,
+        modifiers: iced::keyboard::Modifiers,
+    ) -> Option<Message> {
+        match key.as_ref() {
+            iced::keyboard::Key::Character("o") => Some(Message::SelectImage),
+            iced::keyboard::Key::Character("c") => Some(Message::CopyHashToClipboard),
+            iced::keyboard::Key::Character("z") => {
+                if modifiers.shift() {
+                    Some(Message::Redo)
+                } else {
+                    Some(Message::Undo)
+                }
+            }
+            _ => None,
+        }
+    }
+
     fn header(&self) -> Element<Message> {
         column![
             text(self.title()).size(24),
@@ -190,38 +231,43 @@ impl BlurThing {
         let x_components = column![
             text("X Components"),
             text("Number of samples in the horizontal axis").size(12),
-            slider(1..=8, self.params.components.0, Message::UpX),
+            slider(1..=8, self.params.components.0, Message::UpX)
+                .on_release(Message::SaveParameters)
         ];
 
         let y_components = column![
             text("Y Components"),
             text("Number of samples in the vertical axis").size(12),
-            slider(1..=8, self.params.components.1, Message::UpY),
+            slider(1..=8, self.params.components.1, Message::UpY)
+                .on_release(Message::SaveParameters)
         ];
 
         let smoothness = column![
             text("Smoothness"),
             text("Amount of blur applied before the hash is computed").size(12),
-            slider(0..=32, self.params.blur, Message::UpBlur),
+            slider(0..=32, self.params.blur, Message::UpBlur).on_release(Message::SaveParameters)
         ];
 
         let hue_rotation = column![
             text("Hue Rotation"),
             text("How much to rotate the hue of the image (color shift)").size(12),
-            slider(-180..=180, self.params.hue_rotate, Message::UpHue),
+            slider(-180..=180, self.params.hue_rotate, Message::UpHue)
+                .on_release(Message::SaveParameters)
         ];
 
         let brightness = column![
             text("Brightness"),
             text("Adjusts the overall lightness or darkness of the image").size(12),
-            slider(-100..=100, self.params.brightness, Message::UpBrightness),
+            slider(-100..=100, self.params.brightness, Message::UpBrightness)
+                .on_release(Message::SaveParameters)
         ];
 
         let contrast = column![
             text("Contrast"),
             text("Modifies the difference between the darkest and lightest parts of the image")
                 .size(12),
-            slider(-100..=100, self.params.contrast, Message::UpContrast),
+            slider(-100..=100, self.params.contrast, Message::UpContrast)
+                .on_release(Message::SaveParameters)
         ];
 
         column![

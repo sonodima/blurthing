@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub struct Parameters {
     pub components: (u32, u32),
     pub blur: i32,
@@ -9,7 +10,7 @@ pub struct Parameters {
 
 impl Default for Parameters {
     fn default() -> Self {
-        Parameters {
+        Self {
             components: (4, 3),
             blur: 0,
 
