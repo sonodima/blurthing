@@ -5,8 +5,9 @@ pub enum Message {
     NoOp,
 
     SelectImage,
-    OnFileDropped(PathBuf),
+    FileDropped(PathBuf),
     CopyHashToClipboard,
+    OpenProjectRepo,
 
     UpX(u32),
     UpY(u32),

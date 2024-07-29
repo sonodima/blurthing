@@ -1,95 +1,30 @@
 use std::path::PathBuf;
 
 use ::image::imageops::FilterType;
-use ::image::{DynamicImage, RgbaImage};
+use ::image::{DynamicImage, GenericImageView, RgbaImage};
+use anyhow::{anyhow, Result};
 use iced::alignment::{Horizontal, Vertical};
-use iced::widget::{
-    button, column, container, image, mouse_area, row, scrollable, slider, text, text_input,
-};
-use iced::{
-    event, executor, window, Application, Background, Border, Color, Command, Element, Event,
-    Length, Subscription, Theme,
-};
+use iced::widget::{button, container, image, slider, text, text_input};
+use iced::widget::{column, mouse_area, row, scrollable};
+use iced::{Application, Background, Border, Command, Element, Event, Length, Subscription, Theme};
+use native_dialog::{FileDialog, MessageDialog, MessageType};
 
 use super::message::Message;
 use super::parameters::Parameters;
 
 pub const PREVIEW_SIZE: u32 = 512;
 const IMAGE_DOWNSAMPLE_SIZE: u32 = 128;
+const ALLOWED_EXTENSIONS: [&str; 8] = ["bmp", "gif", "jpg", "jpeg", "png", "tga", "tiff", "webp"];
 
 #[derive(Default)]
 pub struct BlurThing {
-    image: Option<(PathBuf, DynamicImage)>,
+    img: Option<(PathBuf, DynamicImage)>,
     computed: Option<(String, DynamicImage)>,
     params: Parameters,
 }
 
-impl BlurThing {
-    fn try_load_image(&mut self, path: PathBuf) {
-        if let Ok(loaded) = ::image::open(&path) {
-            let resized = loaded.resize_exact(
-                IMAGE_DOWNSAMPLE_SIZE,
-                IMAGE_DOWNSAMPLE_SIZE,
-                FilterType::Lanczos3,
-            );
-
-            self.image = Some((path, resized));
-            self.params = Parameters::default();
-            self.compute_blurhash();
-        } else {
-            eprintln!("failed to load image");
-        }
-    }
-
-    fn compute_blurhash(&mut self) {
-        if let Some(image) = &self.image {
-            let buffer = image
-                .1
-                .blur(self.params.blur as f32)
-                .huerotate(self.params.hue_rotate)
-                .adjust_contrast(self.params.contrast as f32)
-                .brighten(self.params.brightness * 2)
-                .to_rgba8()
-                .to_vec();
-
-            if let Ok(hash) = blurhash::encode(
-                self.params.components.0,
-                self.params.components.1,
-                image.1.width(),
-                image.1.height(),
-                &buffer,
-            ) {
-                let decoded = blurhash::decode(&hash, PREVIEW_SIZE, PREVIEW_SIZE, 1.0).unwrap();
-                let preview = RgbaImage::from_vec(PREVIEW_SIZE, PREVIEW_SIZE, decoded).unwrap();
-                self.computed = Some((hash, DynamicImage::ImageRgba8(preview)));
-            } else {
-                eprintln!("failed to compute blurhash for the image");
-            }
-        }
-    }
-
-    fn placeholder_style() -> container::Appearance {
-        let color = Background::Color(Color::from_rgb(0.9, 0.9, 0.9));
-        container::Appearance {
-            background: Some(color),
-            ..Default::default()
-        }
-    }
-
-    fn container_style() -> container::Appearance {
-        container::Appearance {
-            border: Border {
-                color: Color::from_rgb(0.9, 0.9, 0.9),
-                width: 1.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        }
-    }
-}
-
 impl Application for BlurThing {
-    type Executor = executor::Default;
+    type Executor = iced::executor::Default;
     type Flags = ();
     type Message = Message;
     type Theme = Theme;
@@ -102,20 +37,50 @@ impl Application for BlurThing {
         String::from("BlurThing")
     }
 
+    fn theme(&self) -> Self::Theme {
+        Theme::TokyoNightLight
+    }
+
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
             Message::SelectImage => {
-                if let Some(path) = rfd::FileDialog::new()
-                    .add_filter("image", &["png", "jpg", "jpeg", "webp"])
-                    .pick_file()
+                if let Ok(Some(path)) = FileDialog::new()
+                    .add_filter("Image File", &ALLOWED_EXTENSIONS)
+                    .show_open_single_file()
                 {
-                    self.try_load_image(path);
+                    if let Err(e) = self.try_load_image(path) {
+                        eprintln!("image load failed: {}", e);
+                        _ = MessageDialog::new()
+                            .set_type(MessageType::Error)
+                            .set_title("Image Load Error")
+                            .set_text(&format!("failed to load image: {}", e))
+                            .show_alert();
+                    }
                 }
             }
-            Message::OnFileDropped(path) => {
-                let extension = path.extension().unwrap().to_str().unwrap();
-                if ["png", "jpg", "jpeg", "webp"].contains(&extension) {
-                    self.try_load_image(path);
+            Message::FileDropped(path) => {
+                let extension = path
+                    .extension()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default();
+
+                if ALLOWED_EXTENSIONS.contains(&extension) {
+                    if let Err(e) = self.try_load_image(path) {
+                        eprintln!("image load failed: {}", e);
+                        _ = MessageDialog::new()
+                            .set_type(MessageType::Error)
+                            .set_title("Image Load Error")
+                            .set_text(&format!("failed to load image: {}", e))
+                            .show_alert();
+                    }
+                } else {
+                    eprintln!("received unsupported file type: {}", extension);
+                    _ = MessageDialog::new()
+                        .set_type(MessageType::Warning)
+                        .set_title("Unsupported File Type")
+                        .set_text("the dropped file does not appear to be a supported image type")
+                        .show_alert();
                 }
             }
             Message::CopyHashToClipboard => {
@@ -123,31 +88,42 @@ impl Application for BlurThing {
                     return iced::clipboard::write(hash.clone());
                 }
             }
+            Message::OpenProjectRepo => {
+                let url = env!("CARGO_PKG_REPOSITORY");
+                if let Err(e) = webbrowser::open(url) {
+                    eprintln!("failed to open project repository: {}", e);
+                    _ = MessageDialog::new()
+                        .set_type(MessageType::Error)
+                        .set_title("Application Error")
+                        .set_text(&format!("failed to open project repository: {}", e))
+                        .show_alert();
+                }
+            }
 
             Message::UpX(x) => {
                 self.params.components.0 = x;
-                self.compute_blurhash();
+                self.compute_blurhash_checked();
             }
             Message::UpY(y) => {
                 self.params.components.1 = y;
-                self.compute_blurhash();
+                self.compute_blurhash_checked();
             }
             Message::UpBlur(blur) => {
                 self.params.blur = blur;
-                self.compute_blurhash();
+                self.compute_blurhash_checked();
             }
 
             Message::UpHue(hue) => {
                 self.params.hue_rotate = hue;
-                self.compute_blurhash();
+                self.compute_blurhash_checked();
             }
             Message::UpBrightness(brightness) => {
                 self.params.brightness = brightness;
-                self.compute_blurhash();
+                self.compute_blurhash_checked();
             }
             Message::UpContrast(contrast) => {
                 self.params.contrast = contrast;
-                self.compute_blurhash();
+                self.compute_blurhash_checked();
             }
 
             Message::NoOp => {}
@@ -173,110 +149,201 @@ impl Application for BlurThing {
             .height(size)
             .width(size)
             .padding(32)
-            .style(Self::placeholder_style())
+            .style(self.no_image_style())
             .into()
         };
 
-        let x_control = column![
-            text("X Components"),
-            text("Number of samples in the horizontal axis").size(12),
-            slider(1..=8, self.params.components.0, Message::UpX),
-        ];
-
-        let y_control = column![
-            text("Y Components"),
-            text("Number of samples in the vertical axis").size(12),
-            slider(1..=8, self.params.components.1, Message::UpY),
-        ];
-
-        let blur_control = column![
-            text("Smoothness"),
-            text("Amount of blur applied before the hash is computed").size(12),
-            slider(0..=32, self.params.blur, Message::UpBlur),
-        ];
-
-        let hue_control = column![
-            text("Hue Rotation"),
-            text("How much to rotate the hue of the image (color shift)").size(12),
-            slider(-180..=180, self.params.hue_rotate, Message::UpHue),
-        ];
-
-        let brightness_control = column![
-            text("Brightness"),
-            text("Adjusts the overall lightness or darkness of the image").size(12),
-            slider(-100..=100, self.params.brightness, Message::UpBrightness),
-        ];
-
-        let contrast_control = column![
-            text("Contrast"),
-            text("Modifies the difference between the darkest and lightest parts of the image")
-                .size(12),
-            slider(-100..=100, self.params.contrast, Message::UpContrast),
-        ];
-
-        let select_file_button = button(
-            text("Select File")
-                .width(Length::Fill)
-                .horizontal_alignment(Horizontal::Center),
-        )
-        .width(Length::Fill)
-        .on_press(Message::SelectImage);
-
-        let hash_data = self
-            .computed
-            .as_ref()
-            .map(|(hash, _)| hash.clone())
-            .unwrap_or_default();
-        let hash_field = mouse_area(
-            text_input("Load an image to compute its hash", &hash_data)
-                .on_input(|_| Message::NoOp)
-                .width(Length::Fill),
-        )
-        .on_press(Message::CopyHashToClipboard);
-
-        let copy_control = button(text("Copy to Clipboard")).on_press(Message::CopyHashToClipboard);
-
-        let header = column![
-            text("BlurThing").size(24),
-            text("github.com / sonodima / blurthing").size(14),
-        ]
-        .width(Length::Fill)
-        .padding(16);
-
-        let footer = column![
-            row![hash_field, copy_control].spacing(8),
-            select_file_button
-        ]
-        .padding(16)
-        .spacing(8);
-
-        let controls = column![
-            x_control,
-            y_control,
-            blur_control,
-            hue_control,
-            brightness_control,
-            contrast_control,
-        ]
-        .padding(24)
-        .spacing(8);
-
         let right = column![
-            container(header).style(Self::container_style()),
-            container(scrollable(controls).height(Length::Fill)).style(Self::container_style()),
-            container(footer).style(Self::container_style())
+            container(self.header()).style(self.container_style()),
+            container(scrollable(self.controls()).height(Length::Fill))
+                .style(self.container_style()),
+            container(self.footer()).style(self.container_style())
         ];
 
         container(row![left, right]).into()
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        event::listen_with(|event, _| match event {
+        iced::event::listen_with(|event, _| match event {
             Event::Window(_, event) => match event {
-                window::Event::FileDropped(file) => Some(Message::OnFileDropped(file)),
+                // Handle file drops in the application window.
+                iced::window::Event::FileDropped(file) => Some(Message::FileDropped(file)),
                 _ => None,
             },
             _ => None,
         })
+    }
+}
+
+impl BlurThing {
+    fn header(&self) -> Element<Message> {
+        column![
+            text(self.title()).size(24),
+            mouse_area(text("Star ☆ me on GitHub").size(14)).on_press(Message::OpenProjectRepo)
+        ]
+        .width(Length::Fill)
+        .padding(16)
+        .into()
+    }
+
+    fn controls(&self) -> Element<Message> {
+        let x_components = column![
+            text("X Components"),
+            text("Number of samples in the horizontal axis").size(12),
+            slider(1..=8, self.params.components.0, Message::UpX),
+        ];
+
+        let y_components = column![
+            text("Y Components"),
+            text("Number of samples in the vertical axis").size(12),
+            slider(1..=8, self.params.components.1, Message::UpY),
+        ];
+
+        let smoothness = column![
+            text("Smoothness"),
+            text("Amount of blur applied before the hash is computed").size(12),
+            slider(0..=32, self.params.blur, Message::UpBlur),
+        ];
+
+        let hue_rotation = column![
+            text("Hue Rotation"),
+            text("How much to rotate the hue of the image (color shift)").size(12),
+            slider(-180..=180, self.params.hue_rotate, Message::UpHue),
+        ];
+
+        let brightness = column![
+            text("Brightness"),
+            text("Adjusts the overall lightness or darkness of the image").size(12),
+            slider(-100..=100, self.params.brightness, Message::UpBrightness),
+        ];
+
+        let contrast = column![
+            text("Contrast"),
+            text("Modifies the difference between the darkest and lightest parts of the image")
+                .size(12),
+            slider(-100..=100, self.params.contrast, Message::UpContrast),
+        ];
+
+        column![
+            x_components,
+            y_components,
+            smoothness,
+            hue_rotation,
+            brightness,
+            contrast,
+        ]
+        .padding(24)
+        .spacing(8)
+        .into()
+    }
+
+    fn footer(&self) -> Element<Message> {
+        let hash_string = self
+            .computed
+            .as_ref()
+            .map(|(hash, _)| hash.clone())
+            .unwrap_or_default();
+
+        let select_file = button(
+            text("Select File")
+                .width(Length::Fill)
+                .horizontal_alignment(Horizontal::Center),
+        )
+        .on_press(Message::SelectImage);
+
+        let out_hash = text_input("Load an image to compute its hash", &hash_string)
+            .on_input(|_| Message::NoOp);
+
+        let mut copy_to_clipboard = button("Copy to Clipboard");
+        if self.computed.is_some() {
+            copy_to_clipboard = copy_to_clipboard.on_press(Message::CopyHashToClipboard)
+        }
+
+        column![select_file, row![out_hash, copy_to_clipboard].spacing(8)]
+            .padding(16)
+            .spacing(8)
+            .into()
+    }
+
+    fn try_load_image(&mut self, path: PathBuf) -> Result<()> {
+        let loaded = ::image::open(&path).map_err(|e| anyhow!(e.to_string().to_lowercase()))?;
+
+        // Downsample the image to a smaller size for faster processing.
+        let resized = loaded.resize_exact(
+            IMAGE_DOWNSAMPLE_SIZE,
+            IMAGE_DOWNSAMPLE_SIZE,
+            FilterType::Lanczos3,
+        );
+
+        // Store the image and reset the parameters to their defaults.
+        self.img = Some((path, resized));
+        self.params = Parameters::default();
+        self.compute_blurhash()
+    }
+
+    fn compute_blurhash(&mut self) -> Result<()> {
+        let img = self
+            .img
+            .as_ref()
+            .ok_or_else(|| anyhow!("source image is not available"))?;
+
+        let buffer = img
+            .1
+            .blur(self.params.blur as f32)
+            .huerotate(self.params.hue_rotate)
+            .adjust_contrast(self.params.contrast as f32)
+            .brighten(self.params.brightness * 2)
+            .to_rgba8()
+            .to_vec();
+
+        let (width, height) = img.1.dimensions();
+        let (x, y) = self.params.components;
+        // Encode the blurhash and decode it to a preview image for display.
+        let hash = blurhash::encode(x, y, width, height, &buffer)
+            .map_err(|_| anyhow!("failed to compute the blurhash"))?;
+        let decoded = blurhash::decode(&hash, PREVIEW_SIZE, PREVIEW_SIZE, 1.0)
+            .map_err(|_| anyhow!("failed to decode the computed blurhash"))?;
+        let preview = RgbaImage::from_vec(PREVIEW_SIZE, PREVIEW_SIZE, decoded)
+            .ok_or_else(|| anyhow!("failed to create preview image from decoded buffer"))?;
+
+        self.computed = Some((hash, DynamicImage::ImageRgba8(preview)));
+        Ok(())
+    }
+
+    fn compute_blurhash_checked(&mut self) {
+        if self.img.is_none() {
+            return;
+        }
+
+        if let Err(e) = self.compute_blurhash() {
+            eprintln!("failed to compute blurhash: {}", e);
+            _ = MessageDialog::new()
+                .set_type(MessageType::Error)
+                .set_title("Computation Error")
+                .set_text(&format!("failed to compute blurhash: {}", e))
+                .show_alert();
+        }
+    }
+
+    fn no_image_style(&self) -> container::Appearance {
+        let background = self.theme().extended_palette().background.strong.color;
+        let border = self.theme().extended_palette().background.strong.text;
+        container::Appearance {
+            background: Some(Background::Color(background)),
+            text_color: Some(border),
+            ..Default::default()
+        }
+    }
+
+    fn container_style(&self) -> container::Appearance {
+        let border = self.theme().extended_palette().background.strong.color;
+        container::Appearance {
+            border: Border {
+                color: border,
+                width: 1.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        }
     }
 }

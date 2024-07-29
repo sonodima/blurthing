@@ -9,10 +9,13 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
+anyhow = "1.0.86"
 blurhash = "0.2.3"
 iced = { version = "0.12.1", features = ["image"] }
 image = "0.25.2"
+native-dialog = "0.7.0"
 rfd = "0.14.1"
+webbrowser = "1.0.1"
 
 [package.metadata.bundle]
 name = "BlurThing"
@@ -25,3 +28,9 @@ strip = true
 opt-level = 2
 lto = true
 codegen-units = 1
+
+[profile.dev.package."blurhash"]
+opt-level = 3
+
+[profile.dev.package."image"]
+opt-level = 3
