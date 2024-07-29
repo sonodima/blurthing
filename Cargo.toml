@@ -1,0 +1,27 @@
+[package]
+name = "blurthing"
+version = "0.1.0"
+edition = "2021"
+authors = ["Tommaso Dimatore <sonodimaa@icloud.com>"]
+description = "Simplify the process of computing BlurHashes from images."
+repository = "https://github.com/sonodima/blurthing"
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+blurhash = "0.2.3"
+iced = { version = "0.12.1", features = ["image"] }
+image = "0.25.2"
+rfd = "0.14.1"
+
+[package.metadata.bundle]
+name = "BlurThing"
+identifier = "com.sonodima.blurthing"
+icon = ["assets/icon/*.png"]
+category = "Graphics"
+
+[profile.release]
+strip = true
+opt-level = 2
+lto = true
+codegen-units = 1
