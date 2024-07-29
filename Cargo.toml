@@ -1,6 +1,6 @@
 [package]
 name = "blurthing"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Tommaso Dimatore <sonodimaa@icloud.com>"]
 description = "Simplify the process of computing BlurHashes from images."
@@ -9,17 +9,16 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-anyhow = "1.0.86"
-blurhash = "0.2.3"
-iced = { version = "0.12.1", features = ["image"] }
-image = "0.25.2"
-native-dialog = "0.7.0"
-rfd = "0.14.1"
-webbrowser = "1.0.1"
+anyhow = "1.0"
+blurhash = "0.2"
+iced = { version = "0.12", features = ["image"] }
+image = "0.25"
+native-dialog = "0.7"
+webbrowser = "1.0"
 
 [package.metadata.bundle]
 name = "BlurThing"
-identifier = "com.sonodima.blurthing"
+identifier = "com.sonodima.BlurThing"
 icon = ["assets/icon/*.png"]
 category = "Graphics"
 
