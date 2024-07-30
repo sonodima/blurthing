@@ -1,0 +1,9 @@
+[package]
+name = "xtask"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+cargo_toml = "0.20"
+log = { workspace = true }
+tauri-bundler = "1.6"
