@@ -25,28 +25,19 @@ Some hotkeys are available for faster interaction:
 
 ## Build and Run
 
-### Requirements
+### Building
 
-- [rust & cargo](https://rustup.rs) for building the project
-- [cargo-bundle](https://crates.io/crates/cargo-bundle) for packaging the application
-
-### Debugging
-
-To run the project in debug mode, use:
+To compile the main executable, run:
 
 ```sh
-cargo run
+cargo run --release
 ```
-
-**NOTE:** some dependencies will still be compiled in release mode for performance reasons.
 
 ### Packaging
 
-You can compile and package the project with:
+After building the executable, you can bundle it into an OS-specific package
+using the following command:
 
 ```sh
-cargo bundle --release
+cargo xtask bundle
 ```
-
-_Now sit back and relax: we have all the optimizations enabled, so it will take a
-while to compile._ 🥹

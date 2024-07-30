@@ -31,8 +31,8 @@ jobs:
       - name: Install Additional Tools
         run: cargo install cargo-bundle
 
-      - name: Build
-        run: cargo bundle --release --target ${{ matrix.target }}
+      - name: Build and Package
+        run: cargo xtask bundle --release --target ${{ matrix.target }}
 
       - name: Move Artifacts
         run: |
@@ -40,7 +40,7 @@ jobs:
 
           mkdir -p dist
           if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            mv osx/*.app dist
+            mv dmg/*.dmg dist
           elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
             mv -t deb/*.deb rpm/*.rpm dist
           elif [ "${{ matrix.os }}" == "windows-latest" ]; then
