@@ -19,7 +19,7 @@ fn run() -> Result<()> {
             let cmd_args = BundleArgs::parse(&mut args)?;
             bundle::cmd_bundle(cmd_args)
         }
-        _ => Err(anyhow::anyhow!("unknown subcommand")),
+        _ => anyhow::bail!("unknown subcommand"),
     }
 }
 

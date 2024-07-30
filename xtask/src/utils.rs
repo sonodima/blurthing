@@ -21,14 +21,11 @@ pub fn get_package_manifest(toml_path: &Path) -> Result<Package> {
         .context("the target file is not a package manifest")
 }
 
-pub fn run_cargo(args: &str) -> Result<()> {
-    if Command::new("cargo")
-        .args(args.trim().split_whitespace())
-        .status()?
-        .success()
-    {
+pub fn run_cargo(args: &[String]) -> Result<()> {
+    let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
+    if Command::new(cargo).args(args).status()?.success() {
         Ok(())
     } else {
-        Err(anyhow::anyhow!("cargo command failed"))
+        anyhow::bail!("cargo command failed")
     }
 }

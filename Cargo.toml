@@ -1,7 +1,19 @@
 [workspace]
-resolve = "2"
+resolver = "2"
 members = ["xtask", "blurthing"]
 
 [workspace.dependencies]
 anyhow = "1.0"
 log = "0.4"
+
+[profile.dev.package."blurhash"]
+opt-level = 3
+
+[profile.dev.package."image"]
+opt-level = 3
+
+[profile.release]
+strip = true
+opt-level = 2
+lto = true
+codegen-units = 1

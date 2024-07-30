@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::vec;
 
 use anyhow::{Context, Result};
 use cargo_toml::Package;
@@ -10,6 +11,8 @@ use tauri_bundler::{
 use crate::args::BundleArgs;
 use crate::utils;
 
+const TARGET_PACKAGE: &str = "blurthing";
+
 const PRODUCT_NAME: &str = "BlurThing";
 const BUNDLE_IDENTIFIER: &str = "com.sonodima.BlurThing";
 const COPYRIGHT: &str = "© 2024 Tommaso Dimatore";
@@ -19,11 +22,12 @@ const APP_ICONS: &str = "icon/*.png";
 const DMG_BACKGROUND: &str = "dmg-background.jpg";
 
 pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
-    // utils::run_cargo("build --package blurthing --release").unwrap();
-
     let workspace_dir = utils::get_workspace_dir()?;
-    let toml_path = workspace_dir.join("blurthing").join("Cargo.toml");
+    let toml_path = workspace_dir.join(TARGET_PACKAGE).join("Cargo.toml");
+
     let manifest = utils::get_package_manifest(&toml_path)?;
+    compile_package(manifest.name().to_string(), args.release, args.target)?;
+
     let binary_name = format!("{}{}", manifest.name(), std::env::consts::EXE_SUFFIX);
 
     let release_dir = workspace_dir.join("target").join("release");
@@ -47,6 +51,21 @@ pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
     tauri_bundler::bundle_project(settings)
         .map_err(|e| anyhow::anyhow!("failed to bundle the project: {}", e))
         .map(|_| ())
+}
+
+fn compile_package(package: String, release: bool, target: Option<String>) -> Result<()> {
+    let mut build_args = vec!["build".to_string(), "--bin".to_string(), package];
+
+    if release {
+        build_args.push("--release".to_string());
+    }
+
+    if let Some(target) = target {
+        build_args.push("--target".to_string());
+        build_args.push(target);
+    }
+
+    utils::run_cargo(&build_args)
 }
 
 fn package_settings(manifest: &Package) -> Result<PackageSettings> {

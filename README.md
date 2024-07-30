@@ -25,19 +25,19 @@ Some hotkeys are available for faster interaction:
 
 ## Build and Run
 
-### Building
-
 To compile the main executable, run:
 
 ```sh
 cargo run --release
 ```
 
-### Packaging
+### Packaging and Bundling
 
-After building the executable, you can bundle it into an OS-specific package
-using the following command:
+With the help of the `tauri-bundler` crate, it is possible to automagically create
+OS-specific distribution bundles.
+
+To build and bundle the application, run:
 
 ```sh
-cargo xtask bundle
+cargo xtask bundle --release
 ```
