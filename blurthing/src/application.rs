@@ -220,7 +220,7 @@ impl BlurThing {
     fn header(&self) -> Element<Message> {
         column![
             text(self.title()).size(24),
-            mouse_area(text("Star ☆ me on GitHub").size(14)).on_press(Message::OpenProjectRepo)
+            mouse_area(text("Star me on GitHub").size(14)).on_press(Message::OpenProjectRepo)
         ]
         .width(Length::Fill)
         .padding(16)
