@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish:
-    name: Build - ${{ matrix.target }}
+    name: Release - ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
 
     strategy:
