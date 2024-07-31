@@ -18,7 +18,7 @@ const BUNDLE_IDENTIFIER: &str = "com.sonodima.BlurThing";
 const COPYRIGHT: &str = "© 2024 Tommaso Dimatore";
 const CATEGORY: AppCategory = AppCategory::GraphicsAndDesign;
 
-const APP_ICONS: &str = "icon/*.png";
+const APP_ICONS: &str = "icon/*";
 const DMG_BACKGROUND: &str = "dmg-background.jpg";
 
 pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
