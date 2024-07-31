@@ -1,3 +1,5 @@
+use std::env;
+use std::env::consts::EXE_SUFFIX;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -27,5 +29,31 @@ pub fn run_cargo(args: &[String]) -> Result<()> {
         Ok(())
     } else {
         anyhow::bail!("cargo command failed")
+    }
+}
+
+pub fn get_target_dir(project_root: &Path, target: &Option<String>, release: bool) -> PathBuf {
+    let mut path = std::env::var("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| project_root.join("target"));
+
+    if let Some(target) = target {
+        path.push(target);
+    }
+
+    let profile = if release { "release" } else { "debug" };
+    path.push(profile);
+    path
+}
+
+pub fn get_binary_suffix(target: &Option<String>) -> String {
+    if let Some(target) = target {
+        if target.contains("windows") {
+            ".exe".to_string()
+        } else {
+            "".to_string()
+        }
+    } else {
+        EXE_SUFFIX.to_string()
     }
 }

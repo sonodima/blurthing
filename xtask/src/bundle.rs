@@ -26,25 +26,27 @@ pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
     let toml_path = workspace_dir.join(TARGET_PACKAGE).join("Cargo.toml");
 
     let manifest = utils::get_package_manifest(&toml_path)?;
-    compile_package(manifest.name().to_string(), args.release, args.target)?;
-
-    let binary_name = format!("{}{}", manifest.name(), std::env::consts::EXE_SUFFIX);
-
-    let release_dir = workspace_dir.join("target").join("release");
-    anyhow::ensure!(
-        release_dir.join(&binary_name).exists(),
-        "binary does not exist, did you build the project?"
-    );
+    compile_package(manifest.name().to_string(), args.release, &args.target)?;
 
     let package = package_settings(&manifest)?;
     let bundle = bundle_settings(&workspace_dir);
+
+    let binary_suffix = utils::get_binary_suffix(&args.target);
+    let binary_name = format!("{}{}", manifest.name(), binary_suffix);
     let main_binary = BundleBinary::new(binary_name, true);
 
-    let settings = SettingsBuilder::new()
+    let target_dir = utils::get_target_dir(&workspace_dir, &args.target, args.release);
+    let mut settings_builder = SettingsBuilder::new()
         .package_settings(package)
         .bundle_settings(bundle)
         .binaries(vec![main_binary])
-        .project_out_directory(release_dir)
+        .project_out_directory(target_dir);
+
+    if let Some(target) = args.target {
+        settings_builder = settings_builder.target(target);
+    }
+
+    let settings = settings_builder
         .build()
         .context("failed to create the bundler settings")?;
 
@@ -53,7 +55,7 @@ pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
         .map(|_| ())
 }
 
-fn compile_package(package: String, release: bool, target: Option<String>) -> Result<()> {
+fn compile_package(package: String, release: bool, target: &Option<String>) -> Result<()> {
     let mut build_args = vec!["build".to_string(), "--bin".to_string(), package];
 
     if release {
@@ -62,7 +64,7 @@ fn compile_package(package: String, release: bool, target: Option<String>) -> Re
 
     if let Some(target) = target {
         build_args.push("--target".to_string());
-        build_args.push(target);
+        build_args.push(target.to_string());
     }
 
     utils::run_cargo(&build_args)
