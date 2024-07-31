@@ -5,6 +5,10 @@ on:
     types: [published]
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   publish:
     name: Release - ${{ matrix.target }}
