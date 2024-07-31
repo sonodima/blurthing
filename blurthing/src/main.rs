@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use iced::{window, Application, Settings, Size};
 
 use application::{BlurThing, PREVIEW_SIZE};
