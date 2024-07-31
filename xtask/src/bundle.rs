@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use cargo_toml::Package;
 use tauri_bundler::{
     AppCategory, BundleBinary, BundleSettings, DmgSettings, PackageSettings, Position,
-    SettingsBuilder, Size,
+    SettingsBuilder, Size, WindowsSettings,
 };
 
 use crate::args::BundleArgs;
@@ -19,6 +19,7 @@ const COPYRIGHT: &str = "© 2024 Tommaso Dimatore";
 const CATEGORY: AppCategory = AppCategory::GraphicsAndDesign;
 
 const APP_ICONS: &str = "icon/*";
+const WINDOWS_ICON: &str = "icon/icon.ico";
 const DMG_BACKGROUND: &str = "dmg-background.jpg";
 
 pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
@@ -102,6 +103,7 @@ fn bundle_settings(workspace_dir: &Path) -> BundleSettings {
         copyright: Some(COPYRIGHT.to_string()),
         category: Some(CATEGORY),
         dmg: dmg_settings(workspace_dir),
+        windows: windows_settings(workspace_dir),
         ..Default::default()
     };
 
@@ -119,6 +121,17 @@ fn dmg_settings(workspace_dir: &Path) -> DmgSettings {
         },
         app_position: Position { x: 170, y: 230 },
         application_folder_position: Position { x: 530, y: 230 },
+        ..Default::default()
+    };
+
+    settings
+}
+
+fn windows_settings(workspace_dir: &Path) -> WindowsSettings {
+    let icon_path = workspace_dir.join("assets").join(WINDOWS_ICON);
+
+    let settings = WindowsSettings {
+        icon_path,
         ..Default::default()
     };
 
