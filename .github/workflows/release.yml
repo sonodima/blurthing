@@ -52,7 +52,7 @@ jobs:
           elif [ "${{ matrix.os }}" == "windows-latest" ]; then
             mv msi/*.msi dist
           elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            mv -t dist deb/*.deb rpm/*.rpm appimage/*.AppImage
+            mv -t dist deb/*.deb rpm/*.rpm
           fi
 
       - name: Upload Release

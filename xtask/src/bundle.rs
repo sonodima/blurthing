@@ -4,7 +4,7 @@ use std::vec;
 use anyhow::{Context, Result};
 use cargo_toml::Package;
 use tauri_bundler::{
-    AppCategory, BundleBinary, BundleSettings, DmgSettings, PackageSettings, Position,
+    AppCategory, BundleBinary, BundleSettings, DmgSettings, PackageSettings, PackageType, Position,
     SettingsBuilder, Size, WindowsSettings,
 };
 
@@ -29,17 +29,15 @@ pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
     let manifest = utils::get_package_manifest(&toml_path)?;
     compile_package(manifest.name().to_string(), args.release, &args.target)?;
 
-    let package = package_settings(&manifest)?;
-    let bundle = bundle_settings(&workspace_dir);
-
     let binary_suffix = utils::get_binary_suffix(&args.target);
     let binary_name = format!("{}{}", manifest.name(), binary_suffix);
     let main_binary = BundleBinary::new(binary_name, true);
 
     let target_dir = utils::get_target_dir(&workspace_dir, &args.target, args.release);
     let mut settings_builder = SettingsBuilder::new()
-        .package_settings(package)
-        .bundle_settings(bundle)
+        .package_settings(package_settings(&manifest)?)
+        .bundle_settings(bundle_settings(&workspace_dir))
+        .package_types(package_types(&args.target))
         .binaries(vec![main_binary])
         .project_out_directory(target_dir);
 
@@ -136,4 +134,13 @@ fn windows_settings(workspace_dir: &Path) -> WindowsSettings {
     };
 
     settings
+}
+
+fn package_types(target: &Option<String>) -> Vec<PackageType> {
+    match utils::get_target_os(target).as_str() {
+        "macos" => vec![PackageType::Dmg],
+        "windows" => vec![PackageType::WindowsMsi],
+        "linux" => vec![PackageType::Deb, PackageType::Rpm],
+        _ => vec![],
+    }
 }

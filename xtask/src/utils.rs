@@ -1,5 +1,5 @@
 use std::env;
-use std::env::consts::EXE_SUFFIX;
+use std::env::consts::OS;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -46,14 +46,19 @@ pub fn get_target_dir(project_root: &Path, target: &Option<String>, release: boo
     path
 }
 
+pub fn get_target_os(target: &Option<String>) -> String {
+    target
+        .as_ref()
+        .map(|t| t.split('-').nth(2))
+        .flatten()
+        .unwrap_or(OS)
+        .replace("darwin", "macos")
+}
+
 pub fn get_binary_suffix(target: &Option<String>) -> String {
-    if let Some(target) = target {
-        if target.contains("windows") {
-            ".exe".to_string()
-        } else {
-            "".to_string()
-        }
+    if get_target_os(target) == "windows" {
+        ".exe".to_string()
     } else {
-        EXE_SUFFIX.to_string()
+        "".to_string()
     }
 }
