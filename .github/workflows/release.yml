@@ -3,7 +3,6 @@ name: Release
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 defaults:
   run:
@@ -48,13 +47,7 @@ jobs:
             mv msi/*.msi dist
           fi
 
-      - name: Upload Release Artifacts
-        uses: actions/upload-artifact@v3
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: release
-          path: target/${{ matrix.target }}/release/bundle/dist
-
-      # - name: Release
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     files: target/${{ matrix.target }}/release/bundle/dist/*
+          files: target/${{ matrix.target }}/release/bundle/dist/*
