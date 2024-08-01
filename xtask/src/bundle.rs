@@ -139,7 +139,7 @@ fn windows_settings(workspace_dir: &Path) -> WindowsSettings {
 fn package_types(target: &Option<String>) -> Vec<PackageType> {
     match utils::get_target_os(target).as_str() {
         "macos" => vec![PackageType::Dmg],
-        "windows" => vec![PackageType::WindowsMsi],
+        "windows" => vec![PackageType::Nsis],
         "linux" => vec![PackageType::Deb, PackageType::Rpm],
         _ => vec![],
     }

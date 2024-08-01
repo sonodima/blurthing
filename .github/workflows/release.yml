@@ -50,10 +50,16 @@ jobs:
           if [ "${{ matrix.os }}" == "macos-latest" ]; then
             mv dmg/*.dmg dist
           elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-            mv msi/*.msi dist
+            mv nsis/*.exe dist
           elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
             mv -t dist deb/*.deb rpm/*.rpm
           fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/bundle/dist
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
