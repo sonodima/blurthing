@@ -1,42 +1,51 @@
 pub struct UndoHistory<T> {
     history: Vec<T>,
-    current: usize,
+    current: Option<usize>,
 }
 
 impl<T> UndoHistory<T> {
     pub fn new() -> Self {
         Self {
             history: vec![],
-            current: 0,
+            current: None,
         }
     }
 
     pub fn push(&mut self, item: T) {
-        self.history.truncate(self.current);
+        if let Some(current) = self.current {
+            self.history.truncate(current + 1);
+        } else {
+            self.history.clear();
+        }
+
         self.history.push(item);
-        self.current += 1;
+        self.current = Some(self.current.map_or(0, |c| c + 1));
     }
 
     pub fn undo(&mut self) -> Option<&T> {
-        if self.current > 0 {
-            self.current -= 1;
-            self.history.get(self.current)
-        } else {
-            None
-        }
+        self.current.and_then(|current| {
+            if current > 0 {
+                self.current = Some(current - 1);
+                self.history.get(current - 1)
+            } else {
+                None
+            }
+        })
     }
 
     pub fn redo(&mut self) -> Option<&T> {
-        if self.current < self.history.len() {
-            self.current += 1;
-            self.history.get(self.current)
-        } else {
-            None
-        }
+        self.current.and_then(|current| {
+            if current < self.history.len() - 1 {
+                self.current = Some(current + 1);
+                self.history.get(current + 1)
+            } else {
+                None
+            }
+        })
     }
 
     pub fn reset(&mut self) {
         self.history.clear();
-        self.current = 0;
+        self.current = None;
     }
 }

@@ -1,4 +1,3 @@
-use core::time;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -11,8 +10,7 @@ use iced::widget::{column, mouse_area, row, scrollable};
 use iced::{Application, Background, Border, Command, Element, Event, Length, Subscription, Theme};
 use native_dialog::{FileDialog, MessageDialog, MessageType};
 
-use crate::history::UndoHistory;
-
+use super::history::UndoHistory;
 use super::message::Message;
 use super::parameters::Parameters;
 
@@ -35,7 +33,7 @@ impl Application for BlurThing {
     type Theme = Theme;
 
     fn new(_flags: ()) -> (Self, Command<Self::Message>) {
-        let instance = Self {
+        let mut instance = Self {
             img: None,
             computed: None,
 
@@ -43,6 +41,7 @@ impl Application for BlurThing {
             history: UndoHistory::new(),
         };
 
+        instance.reset_settings();
         (instance, Command::none())
     }
 
@@ -144,16 +143,12 @@ impl Application for BlurThing {
             }
             Message::Undo => {
                 if let Some(params) = self.history.undo() {
-                    // check if the image has changed
-
                     self.params = params.clone();
                     self.compute_blurhash_checked();
                 }
             }
             Message::Redo => {
                 if let Some(params) = self.history.redo() {
-                    // check if the image has changed
-
                     self.params = params.clone();
                     self.compute_blurhash_checked();
                 }
@@ -371,8 +366,7 @@ impl BlurThing {
 
         // Store the image and reset the parameters to their defaults.
         self.img = Some((path, resized));
-        self.history.reset();
-        self.params = Parameters::default();
+        self.reset_settings();
         self.compute_blurhash()
     }
 
@@ -418,6 +412,13 @@ impl BlurThing {
                 .set_text(&format!("failed to compute blurhash: {}", e))
                 .show_alert();
         }
+    }
+
+    fn reset_settings(&mut self) {
+        self.params = Parameters::default();
+        self.history.reset();
+        // Push the initial parameters to the history stack.
+        self.history.push(self.params.clone());
     }
 
     fn no_image_style(&self) -> container::Appearance {
