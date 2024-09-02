@@ -17,9 +17,3 @@ image = "0.25"
 log = { workspace = true }
 native-dialog = "0.7"
 webbrowser = "1.0"
-
-[package.metadata.bundle]
-name = "BlurThing"
-identifier = "com.sonodima.BlurThing"
-icon = ["assets/icon/*.png"]
-category = "Graphics and Design"
