@@ -48,11 +48,12 @@ jobs:
 
           mkdir -p dist
           if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            mv dmg/*.dmg dist
+            mv dmg/*.dmg dist/blurthing-${{ matrix.target }}.dmg
           elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-            mv msi/*.msi dist
+            mv msi/*.msi dist/blurthing-${{ matrix.target }}.msi
           elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            mv -t dist deb/*.deb rpm/*.rpm
+            mv deb/*.deb dist/blurthing-${{ matrix.target }}.deb
+            mv rpm/*.rpm dist/blurthing-${{ matrix.target }}.rpm
           fi
 
       - name: Upload Artifact
