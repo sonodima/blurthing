@@ -10,9 +10,9 @@ use iced::widget::{column, mouse_area, row, scrollable};
 use iced::{Application, Background, Border, Command, Element, Event, Length, Subscription, Theme};
 use native_dialog::{FileDialog, MessageDialog, MessageType};
 
-use super::history::UndoHistory;
 use super::message::Message;
 use super::parameters::Parameters;
+use super::undo_history::UndoHistory;
 
 pub const PREVIEW_SIZE: u32 = 512;
 const IMAGE_DOWNSAMPLE_SIZE: u32 = 128;
@@ -340,6 +340,11 @@ impl BlurThing {
         )
         .on_press(Message::SelectImage);
 
+        let mut export_image = button("Export Image");
+        if self.computed.is_some() {
+            export_image = export_image.on_press(Message::ExportImage)
+        }
+
         let out_hash = text_input("Load an image to compute its hash", &hash_string)
             .on_input(|_| Message::NoOp);
 
@@ -348,10 +353,13 @@ impl BlurThing {
             copy_to_clipboard = copy_to_clipboard.on_press(Message::CopyHashToClipboard)
         }
 
-        column![select_file, row![out_hash, copy_to_clipboard].spacing(8)]
-            .padding(16)
-            .spacing(8)
-            .into()
+        column![
+            row![select_file, export_image].spacing(8),
+            row![out_hash, copy_to_clipboard].spacing(8)
+        ]
+        .padding(16)
+        .spacing(8)
+        .into()
     }
 
     fn try_load_image(&mut self, path: PathBuf) -> Result<()> {
