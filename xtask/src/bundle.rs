@@ -132,22 +132,18 @@ fn windows_settings(workspace_dir: &Path) -> WindowsSettings {
 
     let settings = WindowsSettings {
         icon_path,
-        nsis: Some(nsis_settings(workspace_dir)),
+        wix: Some(wix_settings(workspace_dir)),
         ..Default::default()
     };
 
     settings
 }
 
-fn nsis_settings(workspace_dir: &Path) -> tauri_bundler::NsisSettings {
+fn wix_settings(workspace_dir: &Path) -> tauri_bundler::WixSettings {
     let license_path = workspace_dir.join(LICENSE_FILE);
-    let sidebar_image_path = workspace_dir.join("assets").join(WINDOWS_SIDEBAR);
-    let icon_path = workspace_dir.join("assets").join(WINDOWS_ICON);
 
-    tauri_bundler::NsisSettings {
+    tauri_bundler::WixSettings {
         license: Some(license_path),
-        sidebar_image: Some(sidebar_image_path),
-        installer_icon: Some(icon_path),
         ..Default::default()
     }
 }
