@@ -1,4 +1,6 @@
+use core::time;
 use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use ::image::imageops::FilterType;
 use ::image::{DynamicImage, GenericImageView, RgbaImage};
@@ -8,6 +10,8 @@ use iced::widget::{button, container, image, slider, text, text_input};
 use iced::widget::{column, mouse_area, row, scrollable};
 use iced::{Application, Background, Border, Command, Element, Event, Length, Subscription, Theme};
 use native_dialog::{FileDialog, MessageDialog, MessageType};
+
+use crate::history::UndoHistory;
 
 use super::message::Message;
 use super::parameters::Parameters;
@@ -21,6 +25,7 @@ pub struct BlurThing {
     computed: Option<(String, DynamicImage)>,
 
     params: Parameters,
+    history: UndoHistory<Parameters>,
 }
 
 impl Application for BlurThing {
@@ -35,6 +40,7 @@ impl Application for BlurThing {
             computed: None,
 
             params: Default::default(),
+            history: UndoHistory::new(),
         };
 
         (instance, Command::none())
@@ -96,6 +102,31 @@ impl Application for BlurThing {
                     return iced::clipboard::write(hash.clone());
                 }
             }
+            Message::ExportImage => {
+                if let Some((_, img)) = &self.computed {
+                    let timestamp = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs();
+                    if let Ok(Some(path)) = FileDialog::new()
+                        .add_filter("Image File", &["jpg", "jpeg", "png", "webp"])
+                        .set_filename(&format!("blurthing-{}.png", timestamp))
+                        .show_save_single_file()
+                    {
+                        if let Err(e) = img.clone().into_rgb8().save(path) {
+                            eprintln!("image export failed: {}", e);
+                            _ = MessageDialog::new()
+                                .set_type(MessageType::Error)
+                                .set_title("Image Export Error")
+                                .set_text(&format!(
+                                    "failed to export image: {}",
+                                    e.to_string().to_lowercase()
+                                ))
+                                .show_alert();
+                        }
+                    }
+                }
+            }
             Message::OpenProjectRepo => {
                 let url = env!("CARGO_PKG_REPOSITORY");
                 if let Err(e) = webbrowser::open(url) {
@@ -108,9 +139,25 @@ impl Application for BlurThing {
                 }
             }
 
-            Message::SaveParameters => {}
-            Message::Undo => {}
-            Message::Redo => {}
+            Message::SaveParameters => {
+                self.history.push(self.params.clone());
+            }
+            Message::Undo => {
+                if let Some(params) = self.history.undo() {
+                    // check if the image has changed
+
+                    self.params = params.clone();
+                    self.compute_blurhash_checked();
+                }
+            }
+            Message::Redo => {
+                if let Some(params) = self.history.redo() {
+                    // check if the image has changed
+
+                    self.params = params.clone();
+                    self.compute_blurhash_checked();
+                }
+            }
 
             Message::UpX(x) => {
                 self.params.components.0 = x;
@@ -206,6 +253,7 @@ impl BlurThing {
         match key.as_ref() {
             iced::keyboard::Key::Character("o") => Some(Message::SelectImage),
             iced::keyboard::Key::Character("c") => Some(Message::CopyHashToClipboard),
+            iced::keyboard::Key::Character("s") => Some(Message::ExportImage),
             iced::keyboard::Key::Character("z") => {
                 if modifiers.shift() {
                     Some(Message::Redo)
@@ -323,6 +371,7 @@ impl BlurThing {
 
         // Store the image and reset the parameters to their defaults.
         self.img = Some((path, resized));
+        self.history.reset();
         self.params = Parameters::default();
         self.compute_blurhash()
     }

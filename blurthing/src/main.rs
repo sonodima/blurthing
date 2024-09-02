@@ -5,6 +5,7 @@ use iced::{window, Application, Settings, Size};
 use application::{BlurThing, PREVIEW_SIZE};
 
 mod application;
+mod history;
 mod message;
 mod parameters;
 

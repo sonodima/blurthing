@@ -7,6 +7,7 @@ pub enum Message {
     SelectImage,
     FileDropped(PathBuf),
     CopyHashToClipboard,
+    ExportImage,
     OpenProjectRepo,
 
     SaveParameters,
