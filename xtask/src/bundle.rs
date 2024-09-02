@@ -21,7 +21,6 @@ const CATEGORY: AppCategory = AppCategory::GraphicsAndDesign;
 const APP_ICONS: &str = "icon/*";
 const LICENSE_FILE: &str = "LICENSE";
 const WINDOWS_ICON: &str = "icon/icon.ico";
-const WINDOWS_SIDEBAR: &str = "windows-sidebar.bmp";
 const DMG_BACKGROUND: &str = "dmg-background.jpg";
 
 pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
