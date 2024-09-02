@@ -19,7 +19,9 @@ const COPYRIGHT: &str = "© 2024 Tommaso Dimatore";
 const CATEGORY: AppCategory = AppCategory::GraphicsAndDesign;
 
 const APP_ICONS: &str = "icon/*";
+const LICENSE_FILE: &str = "LICENSE";
 const WINDOWS_ICON: &str = "icon/icon.ico";
+const WINDOWS_SIDEBAR: &str = "windows-sidebar.bmp";
 const DMG_BACKGROUND: &str = "dmg-background.jpg";
 
 pub fn cmd_bundle(args: BundleArgs) -> Result<()> {
@@ -130,10 +132,24 @@ fn windows_settings(workspace_dir: &Path) -> WindowsSettings {
 
     let settings = WindowsSettings {
         icon_path,
+        nsis: Some(nsis_settings(workspace_dir)),
         ..Default::default()
     };
 
     settings
+}
+
+fn nsis_settings(workspace_dir: &Path) -> tauri_bundler::NsisSettings {
+    let license_path = workspace_dir.join(LICENSE_FILE);
+    let sidebar_image_path = workspace_dir.join("assets").join(WINDOWS_SIDEBAR);
+    let icon_path = workspace_dir.join("assets").join(WINDOWS_ICON);
+
+    tauri_bundler::NsisSettings {
+        license: Some(license_path),
+        sidebar_image: Some(sidebar_image_path),
+        installer_icon: Some(icon_path),
+        ..Default::default()
+    }
 }
 
 fn package_types(target: &Option<String>) -> Vec<PackageType> {
