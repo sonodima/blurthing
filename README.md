@@ -20,6 +20,7 @@ Some hotkeys are available for faster interaction:
 
 - <kbd>Ctrl</kbd> + <kbd>O</kbd> -> shows the open file dialog
 - <kbd>Ctrl</kbd> + <kbd>C</kbd> -> copies the BlurHash to the clipboard
+- <kbd>Ctrl</kbd> + <kbd>S</kbd> -> exports the current blurred image to a file
 - <kbd>Ctrl</kbd> + <kbd>Z</kbd> -> undo the last modification
 - <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> -> redo the last modification
 
@@ -28,7 +29,7 @@ Some hotkeys are available for faster interaction:
 To compile the main executable, run:
 
 ```sh
-cargo run --release
+cargo run --bin blurhash --release
 ```
 
 ### Packaging and Bundling
