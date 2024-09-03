@@ -63,12 +63,6 @@ message. This is due to the application currently not being signed.
 
 To open it anyway, you can right-click on the application and select **Open**.
 
-```sh
-xattr -d com.apple.quarantine /path/to/BlurThing.app
-```
-
-_(replacing `/path/to/BlurThing.app` with the actual path to the application)_
-
 ## Build and Run
 
 To compile the main executable, run:
