@@ -4,8 +4,8 @@ use std::vec;
 use anyhow::{Context, Result};
 use cargo_toml::Package;
 use tauri_bundler::{
-    AppCategory, BundleBinary, BundleSettings, DmgSettings, PackageSettings, PackageType, Position,
-    SettingsBuilder, Size, WindowsSettings,
+    AppCategory, BundleBinary, BundleSettings, DmgSettings, MacOsSettings, PackageSettings,
+    PackageType, Position, SettingsBuilder, Size, WindowsSettings, WixSettings,
 };
 
 use crate::args::BundleArgs;
@@ -73,7 +73,7 @@ fn compile_package(package: String, release: bool, target: &Option<String>) -> R
 fn package_settings(manifest: &Package) -> Result<PackageSettings> {
     let authors = manifest.authors().iter().map(|s| s.to_string()).collect();
 
-    let settings = PackageSettings {
+    Ok(PackageSettings {
         product_name: PRODUCT_NAME.to_string(),
         version: manifest.version().to_string(),
         description: manifest
@@ -84,9 +84,7 @@ fn package_settings(manifest: &Package) -> Result<PackageSettings> {
         authors: Some(authors),
         license: manifest.license().map(|s| s.to_string()),
         default_run: manifest.default_run.as_ref().map(|s| s.to_string()),
-    };
-
-    Ok(settings)
+    })
 }
 
 fn bundle_settings(workspace_dir: &Path) -> BundleSettings {
@@ -96,24 +94,32 @@ fn bundle_settings(workspace_dir: &Path) -> BundleSettings {
         .to_string_lossy()
         .to_string();
 
-    let settings = BundleSettings {
+    BundleSettings {
         identifier: Some(BUNDLE_IDENTIFIER.to_string()),
         icon: Some(vec![icon]),
         copyright: Some(COPYRIGHT.to_string()),
         category: Some(CATEGORY),
+        macos: macos_settings(workspace_dir),
         dmg: dmg_settings(workspace_dir),
-        macos: macos_settings(),
         windows: windows_settings(workspace_dir),
         ..Default::default()
-    };
+    }
+}
 
-    settings
+fn macos_settings(workspace_dir: &Path) -> MacOsSettings {
+    let license_path = workspace_dir.join("assets").join(LICENSE_FILE);
+
+    MacOsSettings {
+        license: Some(license_path.to_string_lossy().into()),
+        signing_identity: Some("-".into()), // ad-hoc signing
+        ..Default::default()
+    }
 }
 
 fn dmg_settings(workspace_dir: &Path) -> DmgSettings {
     let background = workspace_dir.join("assets").join(DMG_BACKGROUND);
 
-    let settings = DmgSettings {
+    DmgSettings {
         background: Some(background),
         window_size: Size {
             width: 700,
@@ -122,34 +128,23 @@ fn dmg_settings(workspace_dir: &Path) -> DmgSettings {
         app_position: Position { x: 170, y: 230 },
         application_folder_position: Position { x: 530, y: 230 },
         ..Default::default()
-    };
-
-    settings
-}
-
-fn macos_settings() -> tauri_bundler::MacOsSettings {
-    tauri_bundler::MacOsSettings {
-        hardened_runtime: false,
-        ..Default::default()
     }
 }
 
 fn windows_settings(workspace_dir: &Path) -> WindowsSettings {
     let icon_path = workspace_dir.join("assets").join(WINDOWS_ICON);
 
-    let settings = WindowsSettings {
+    WindowsSettings {
         icon_path,
         wix: Some(wix_settings(workspace_dir)),
         ..Default::default()
-    };
-
-    settings
+    }
 }
 
-fn wix_settings(workspace_dir: &Path) -> tauri_bundler::WixSettings {
+fn wix_settings(workspace_dir: &Path) -> WixSettings {
     let license_path = workspace_dir.join("assets").join(LICENSE_FILE);
 
-    tauri_bundler::WixSettings {
+    WixSettings {
         license: Some(license_path),
         ..Default::default()
     }
