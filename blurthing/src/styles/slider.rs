@@ -46,7 +46,7 @@ impl StyleSheet for Theme {
 
         Appearance {
             rail: Rail {
-                colors: (self.palette.primary_500, self.palette.base_500),
+                colors: (self.palette.primary_500, self.palette.base_400),
                 ..base.rail
             },
             ..base

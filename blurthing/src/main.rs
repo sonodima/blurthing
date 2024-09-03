@@ -13,7 +13,7 @@ mod widgets;
 
 pub fn main() -> iced::Result {
     let window = window::Settings {
-        size: Size::new(1024.0, PREVIEW_SIZE as f32),
+        size: Size::new(PREVIEW_SIZE as f32 * 2.0, PREVIEW_SIZE as f32),
         resizable: false,
         ..Default::default()
     };

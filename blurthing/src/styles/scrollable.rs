@@ -10,15 +10,11 @@ impl StyleSheet for Theme {
         Appearance {
             container: Default::default(),
             scrollbar: Scrollbar {
-                background: None,
+                background: Some(self.palette.base_100.into()),
                 border: Border::default(),
                 scroller: Scroller {
-                    color: self.palette.base_300,
-                    border: Border {
-                        color: self.palette.base_500,
-                        width: 1.0,
-                        radius: 4.0.into(),
-                    },
+                    color: self.palette.base_200,
+                    border: Default::default(),
                 },
             },
             gap: None,
@@ -32,9 +28,9 @@ impl StyleSheet for Theme {
             scrollbar: Scrollbar {
                 scroller: Scroller {
                     color: if is_mouse_over_scrollbar {
-                        self.palette.base_400
-                    } else {
                         self.palette.base_300
+                    } else {
+                        self.palette.base_200
                     },
                     ..base.scrollbar.scroller
                 },
@@ -51,7 +47,7 @@ impl StyleSheet for Theme {
         Appearance {
             scrollbar: Scrollbar {
                 scroller: Scroller {
-                    color: self.palette.base_500,
+                    color: self.palette.base_400,
                     ..base.scrollbar.scroller
                 },
                 ..base.scrollbar

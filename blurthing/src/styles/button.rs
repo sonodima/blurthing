@@ -1,5 +1,5 @@
 use iced::widget::button::{Appearance, StyleSheet};
-use iced::{color, Background, Border, Shadow};
+use iced::{color, Border, Color, Shadow};
 
 use super::Theme;
 
@@ -43,7 +43,32 @@ impl StyleSheet for Theme {
     }
 
     fn disabled(&self, style: &Self::Style) -> Appearance {
-        self.active(style) // TODO
+        let base = self.active(style);
+
+        let background = match style {
+            Button::Default => self.palette.base_disabled.into(),
+            Button::Primary => self.palette.primary_disabled.into(),
+        };
+
+        Appearance {
+            background: Some(background),
+            text_color: match style {
+                Button::Default => self.palette.base_content_disabled,
+                Button::Primary => self.palette.primary_content_disabled,
+            },
+            border: Border {
+                color: match style {
+                    Button::Default => self.palette.base_200,
+                    Button::Primary => self.palette.primary_100,
+                },
+                ..base.border
+            },
+            shadow: Shadow {
+                color: Color::TRANSPARENT,
+                ..Default::default()
+            },
+            ..base
+        }
     }
 
     fn hovered(&self, style: &Self::Style) -> Appearance {

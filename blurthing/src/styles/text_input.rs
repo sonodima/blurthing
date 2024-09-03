@@ -1,5 +1,5 @@
 use iced::widget::text_input::{Appearance, StyleSheet};
-use iced::{Background, Border, Color};
+use iced::{Border, Color};
 
 use super::Theme;
 
@@ -20,7 +20,11 @@ impl StyleSheet for Theme {
 
     fn disabled(&self, _style: &Self::Style) -> Appearance {
         Appearance {
-            background: self.palette.base_300.into(), // TODO: change
+            background: self.palette.base_disabled.into(),
+            border: Border {
+                color: self.palette.base_200,
+                ..self.active(_style).border
+            },
             ..self.active(_style)
         }
     }
@@ -42,7 +46,7 @@ impl StyleSheet for Theme {
     }
 
     fn disabled_color(&self, _style: &Self::Style) -> Color {
-        self.palette.base_400 // todo change
+        self.palette.base_content_disabled
     }
 
     fn placeholder_color(&self, _style: &Self::Style) -> Color {

@@ -208,25 +208,12 @@ impl Application for BlurThing {
     }
 
     fn view(&self) -> Element<Self::Message> {
-        let left: Element<Self::Message> = if let Some((_, img)) = &self.computed {
-            let handle = iced::widget::image::Handle::from_pixels(
-                img.width(),
-                img.height(),
-                img.to_rgba8().to_vec(),
-            );
-
-            Image::new(handle).into()
-        } else {
-            let text = Text::new("No image loaded").size(24);
-            text.into()
-        };
-
         let right = Column::new()
             .push(Container::new(self.header()).width(Length::Fill))
             .push(Scrollable::new(self.controls()).height(Length::Fill))
             .push(Container::new(self.footer()));
 
-        Row::new().push(left).push(right).into()
+        Row::new().push(self.preview()).push(right).into()
     }
 }
 
@@ -327,6 +314,31 @@ impl BlurThing {
 //
 
 impl BlurThing {
+    fn preview(&self) -> Element<Message> {
+        if let Some((_, img)) = &self.computed {
+            let handle = iced::widget::image::Handle::from_pixels(
+                img.width(),
+                img.height(),
+                img.to_rgba8().to_vec(),
+            );
+
+            Image::new(handle).into()
+        } else {
+            Container::new(
+                Text::new("Press on \"Select File\" or drop an image here to get started")
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .horizontal_alignment(Horizontal::Center)
+                    .vertical_alignment(Vertical::Center),
+            )
+            .style(styles::Container::Medium)
+            .height(Length::Fixed(PREVIEW_SIZE as f32))
+            .width(Length::Fixed(PREVIEW_SIZE as f32))
+            .padding(32)
+            .into()
+        }
+    }
+
     fn header(&self) -> Element<Message> {
         MouseArea::new(
             Column::new()
@@ -341,7 +353,11 @@ impl BlurThing {
     fn controls(&self) -> Element<Message> {
         let x_components = Column::new()
             .push(Text::new("X Components"))
-            .push(Text::new("Number of samples in the horizontal axis").size(12))
+            .push(
+                Text::new("Number of samples in the horizontal axis")
+                    .style(styles::Text::Subtle)
+                    .size(12),
+            )
             .push(
                 Slider::new(1..=8, self.params.components.0, Message::UpX)
                     .on_release(Message::SaveParameters),
@@ -349,7 +365,11 @@ impl BlurThing {
 
         let y_components = Column::new()
             .push(Text::new("Y Components"))
-            .push(Text::new("Number of samples in the vertical axis").size(12))
+            .push(
+                Text::new("Number of samples in the vertical axis")
+                    .style(styles::Text::Subtle)
+                    .size(12),
+            )
             .push(
                 Slider::new(1..=8, self.params.components.1, Message::UpY)
                     .on_release(Message::SaveParameters),
@@ -357,7 +377,11 @@ impl BlurThing {
 
         let smoothness = Column::new()
             .push(Text::new("Smoothness"))
-            .push(Text::new("Amount of blur applied before the hash is computed").size(12))
+            .push(
+                Text::new("Amount of blur applied before the hash is computed")
+                    .style(styles::Text::Subtle)
+                    .size(12),
+            )
             .push(
                 Slider::new(0..=32, self.params.blur, Message::UpBlur)
                     .on_release(Message::SaveParameters),
@@ -365,7 +389,11 @@ impl BlurThing {
 
         let hue_rotation = Column::new()
             .push(Text::new("Hue Rotation"))
-            .push(Text::new("How much to rotate the hue of the image (color shift)").size(12))
+            .push(
+                Text::new("How much to rotate the hue of the image (color shift)")
+                    .style(styles::Text::Subtle)
+                    .size(12),
+            )
             .push(
                 Slider::new(-180..=180, self.params.hue_rotate, Message::UpHue)
                     .on_release(Message::SaveParameters),
@@ -373,7 +401,11 @@ impl BlurThing {
 
         let brightness = Column::new()
             .push(Text::new("Brightness"))
-            .push(Text::new("Adjusts the overall lightness or darkness of the image").size(12))
+            .push(
+                Text::new("Adjusts the overall lightness or darkness of the image")
+                    .style(styles::Text::Subtle)
+                    .size(12),
+            )
             .push(
                 Slider::new(-100..=100, self.params.brightness, Message::UpBrightness)
                     .on_release(Message::SaveParameters),
@@ -385,6 +417,7 @@ impl BlurThing {
                 Text::new(
                     "Modifies the difference between the darkest and lightest parts of the image",
                 )
+                .style(styles::Text::Subtle)
                 .size(12),
             )
             .push(
