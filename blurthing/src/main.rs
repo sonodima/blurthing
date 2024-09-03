@@ -7,7 +7,9 @@ use application::{BlurThing, PREVIEW_SIZE};
 mod application;
 mod message;
 mod parameters;
+mod styles;
 mod undo_history;
+mod widgets;
 
 pub fn main() -> iced::Result {
     let window = window::Settings {

@@ -5,14 +5,16 @@ use ::image::imageops::FilterType;
 use ::image::{DynamicImage, GenericImageView, RgbaImage};
 use anyhow::{anyhow, Result};
 use iced::alignment::{Horizontal, Vertical};
-use iced::widget::{button, container, image, slider, text, text_input};
-use iced::widget::{column, mouse_area, row, scrollable};
-use iced::{Application, Background, Border, Command, Element, Event, Length, Subscription, Theme};
+use iced::widget::Image;
+
+use iced::{Application, Command, Event, Length, Subscription};
 use native_dialog::{FileDialog, MessageDialog, MessageType};
 
 use super::message::Message;
 use super::parameters::Parameters;
+use super::styles::Theme;
 use super::undo_history::UndoHistory;
+use crate::{styles, widgets::*};
 
 pub const PREVIEW_SIZE: u32 = 512;
 const IMAGE_DOWNSAMPLE_SIZE: u32 = 128;
@@ -48,10 +50,6 @@ impl Application for BlurThing {
 
     fn title(&self) -> String {
         String::from("BlurThing")
-    }
-
-    fn theme(&self) -> Self::Theme {
-        Theme::TokyoNightLight
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -211,35 +209,30 @@ impl Application for BlurThing {
 
     fn view(&self) -> Element<Self::Message> {
         let left: Element<Self::Message> = if let Some((_, img)) = &self.computed {
-            let buffer = img.to_rgba8().to_vec();
-            let handle = image::Handle::from_pixels(img.width(), img.height(), buffer);
-            image(handle).into()
+            let handle = iced::widget::image::Handle::from_pixels(
+                img.width(),
+                img.height(),
+                img.to_rgba8().to_vec(),
+            );
+
+            Image::new(handle).into()
         } else {
-            let size = Length::Fixed(PREVIEW_SIZE as f32);
-            container(
-                text("Press on \"Select File\" or drop an image here to get started!")
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .vertical_alignment(Vertical::Center)
-                    .horizontal_alignment(Horizontal::Center),
-            )
-            .height(size)
-            .width(size)
-            .padding(32)
-            .style(self.no_image_style())
-            .into()
+            let text = Text::new("No image loaded").size(24);
+            text.into()
         };
 
-        let right = column![
-            container(self.header()).style(self.container_style()),
-            container(scrollable(self.controls()).height(Length::Fill))
-                .style(self.container_style()),
-            container(self.footer()).style(self.container_style())
-        ];
+        let right = Column::new()
+            .push(Container::new(self.header()).width(Length::Fill))
+            .push(Scrollable::new(self.controls()).height(Length::Fill))
+            .push(Container::new(self.footer()));
 
-        container(row![left, right]).into()
+        Row::new().push(left).push(right).into()
     }
 }
+
+//
+// Main Logic
+//
 
 impl BlurThing {
     fn handle_hotkey(
@@ -259,108 +252,6 @@ impl BlurThing {
             }
             _ => None,
         }
-    }
-
-    fn header(&self) -> Element<Message> {
-        mouse_area(
-            column![text(self.title()).size(24), text("by sonodima").size(14)]
-                .width(Length::Fill)
-                .padding([16, 24]),
-        )
-        .on_press(Message::OpenProjectRepo)
-        .into()
-    }
-
-    fn controls(&self) -> Element<Message> {
-        let x_components = column![
-            text("X Components"),
-            text("Number of samples in the horizontal axis").size(12),
-            slider(1..=8, self.params.components.0, Message::UpX)
-                .on_release(Message::SaveParameters)
-        ];
-
-        let y_components = column![
-            text("Y Components"),
-            text("Number of samples in the vertical axis").size(12),
-            slider(1..=8, self.params.components.1, Message::UpY)
-                .on_release(Message::SaveParameters)
-        ];
-
-        let smoothness = column![
-            text("Smoothness"),
-            text("Amount of blur applied before the hash is computed").size(12),
-            slider(0..=32, self.params.blur, Message::UpBlur).on_release(Message::SaveParameters)
-        ];
-
-        let hue_rotation = column![
-            text("Hue Rotation"),
-            text("How much to rotate the hue of the image (color shift)").size(12),
-            slider(-180..=180, self.params.hue_rotate, Message::UpHue)
-                .on_release(Message::SaveParameters)
-        ];
-
-        let brightness = column![
-            text("Brightness"),
-            text("Adjusts the overall lightness or darkness of the image").size(12),
-            slider(-100..=100, self.params.brightness, Message::UpBrightness)
-                .on_release(Message::SaveParameters)
-        ];
-
-        let contrast = column![
-            text("Contrast"),
-            text("Modifies the difference between the darkest and lightest parts of the image")
-                .size(12),
-            slider(-100..=100, self.params.contrast, Message::UpContrast)
-                .on_release(Message::SaveParameters)
-        ];
-
-        column![
-            x_components,
-            y_components,
-            smoothness,
-            hue_rotation,
-            brightness,
-            contrast,
-        ]
-        .padding(24)
-        .spacing(8)
-        .into()
-    }
-
-    fn footer(&self) -> Element<Message> {
-        let hash_string = self
-            .computed
-            .as_ref()
-            .map(|(hash, _)| hash.clone())
-            .unwrap_or_default();
-
-        let select_file = button(
-            text("Select File")
-                .width(Length::Fill)
-                .horizontal_alignment(Horizontal::Center),
-        )
-        .on_press(Message::SelectImage);
-
-        let mut export_image = button("Export Image");
-        if self.computed.is_some() {
-            export_image = export_image.on_press(Message::ExportImage)
-        }
-
-        let out_hash = text_input("Load an image to compute its hash", &hash_string)
-            .on_input(|_| Message::NoOp);
-
-        let mut copy_to_clipboard = button("Copy to Clipboard");
-        if self.computed.is_some() {
-            copy_to_clipboard = copy_to_clipboard.on_press(Message::CopyHashToClipboard)
-        }
-
-        column![
-            row![select_file, export_image].spacing(8),
-            row![out_hash, copy_to_clipboard].spacing(8)
-        ]
-        .padding(16)
-        .spacing(8)
-        .into()
     }
 
     fn try_load_image(&mut self, path: PathBuf) -> Result<()> {
@@ -429,26 +320,123 @@ impl BlurThing {
         // Push the initial parameters to the history stack.
         self.history.push(self.params.clone());
     }
+}
 
-    fn no_image_style(&self) -> container::Appearance {
-        let background = self.theme().extended_palette().background.strong.color;
-        let border = self.theme().extended_palette().background.strong.text;
-        container::Appearance {
-            background: Some(Background::Color(background)),
-            text_color: Some(border),
-            ..Default::default()
-        }
+//
+// UI Components
+//
+
+impl BlurThing {
+    fn header(&self) -> Element<Message> {
+        MouseArea::new(
+            Column::new()
+                .push(Text::new(self.title()).size(24))
+                .push(Text::new("by sonodima").size(14))
+                .padding([16, 24]),
+        )
+        .on_press(Message::OpenProjectRepo)
+        .into()
     }
 
-    fn container_style(&self) -> container::Appearance {
-        let border = self.theme().extended_palette().background.strong.color;
-        container::Appearance {
-            border: Border {
-                color: border,
-                width: 1.0,
-                ..Default::default()
-            },
-            ..Default::default()
+    fn controls(&self) -> Element<Message> {
+        let x_components = Column::new()
+            .push(Text::new("X Components"))
+            .push(Text::new("Number of samples in the horizontal axis").size(12))
+            .push(
+                Slider::new(1..=8, self.params.components.0, Message::UpX)
+                    .on_release(Message::SaveParameters),
+            );
+
+        let y_components = Column::new()
+            .push(Text::new("Y Components"))
+            .push(Text::new("Number of samples in the vertical axis").size(12))
+            .push(
+                Slider::new(1..=8, self.params.components.1, Message::UpY)
+                    .on_release(Message::SaveParameters),
+            );
+
+        let smoothness = Column::new()
+            .push(Text::new("Smoothness"))
+            .push(Text::new("Amount of blur applied before the hash is computed").size(12))
+            .push(
+                Slider::new(0..=32, self.params.blur, Message::UpBlur)
+                    .on_release(Message::SaveParameters),
+            );
+
+        let hue_rotation = Column::new()
+            .push(Text::new("Hue Rotation"))
+            .push(Text::new("How much to rotate the hue of the image (color shift)").size(12))
+            .push(
+                Slider::new(-180..=180, self.params.hue_rotate, Message::UpHue)
+                    .on_release(Message::SaveParameters),
+            );
+
+        let brightness = Column::new()
+            .push(Text::new("Brightness"))
+            .push(Text::new("Adjusts the overall lightness or darkness of the image").size(12))
+            .push(
+                Slider::new(-100..=100, self.params.brightness, Message::UpBrightness)
+                    .on_release(Message::SaveParameters),
+            );
+
+        let contrast = Column::new()
+            .push(Text::new("Contrast"))
+            .push(
+                Text::new(
+                    "Modifies the difference between the darkest and lightest parts of the image",
+                )
+                .size(12),
+            )
+            .push(
+                Slider::new(-100..=100, self.params.contrast, Message::UpContrast)
+                    .on_release(Message::SaveParameters),
+            );
+
+        Column::new()
+            .push(x_components)
+            .push(y_components)
+            .push(smoothness)
+            .push(hue_rotation)
+            .push(brightness)
+            .push(contrast)
+            .padding(24)
+            .spacing(8)
+            .into()
+    }
+
+    fn footer(&self) -> Element<Message> {
+        let select_file = Button::new(
+            Text::new("Select File")
+                .width(Length::Fill)
+                .horizontal_alignment(Horizontal::Center),
+        )
+        .on_press(Message::SelectImage);
+
+        let mut export_image = Button::new("Export Image").style(styles::Button::Primary);
+        if self.computed.is_some() {
+            export_image = export_image.on_press(Message::ExportImage)
         }
+
+        let hash_string = self
+            .computed
+            .as_ref()
+            .map(|(hash, _)| hash.clone())
+            .unwrap_or_default();
+        let mut out_hash = TextInput::new("Load an image to compute its hash", &hash_string);
+        if self.computed.is_some() {
+            out_hash = out_hash.on_input(|_| Message::NoOp);
+        }
+
+        let mut copy_to_clipboard = Button::new("Copy to Clipboard").style(styles::Button::Primary);
+        if self.computed.is_some() {
+            copy_to_clipboard = copy_to_clipboard.on_press(Message::CopyHashToClipboard)
+        }
+
+        Column::new()
+            .push(Row::new().push(select_file).push(export_image).spacing(8))
+            .push(Row::new().push(out_hash).push(copy_to_clipboard).spacing(8))
+            .padding(16)
+            .spacing(8)
+            .into()
     }
 }
