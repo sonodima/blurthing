@@ -1,11 +1,11 @@
 <div align="center" style="margin-top: 24px;">
-    <img src="assets/demo.gif" alt="Application demo" width="80%" />
-    <div style="margin-top: 24px; margin-bottom: 12;">
+    <div>
         <h1>BlurThing 🌄</h1>
         <span>Simple application for generating and customizing <a href="https://blurha.sh">
             BlurHashes</a> from<br/>images, with extensive controls for
             image manipulation.</span>
     </div>
+    <br/>
     <a href="https://github.com/sonodima/blurthing/releases/latest"> 
         <img src="https://img.shields.io/github/v/release/sonodima/blurthing?style=for-the-badge&color=yellow"/>
     </a>
@@ -15,6 +15,8 @@
     <a href="LICENSE"> 
         <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge"/>
     </a>
+    <br/><br/>
+    <img src="assets/demo.gif" alt="Application demo" width="80%" />
 </div>
 
 ## Usage
