@@ -81,3 +81,9 @@ To build and bundle the application, run:
 ```sh
 cargo xtask bundle --release
 ```
+
+## Future Plans and Ideas
+
+- [ ] Add new image manipulation filters (e.g. rotation, flip, waves???, distort???)
+- [ ] Improve the export UX, allowing the user to choose the output resolution
+- [ ] Implement an _"I feel lucky"_ button that loads a random image from the internet _(what could go wrong anyway?)_
