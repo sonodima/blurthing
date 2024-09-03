@@ -17,6 +17,7 @@ use super::undo_history::UndoHistory;
 pub const PREVIEW_SIZE: u32 = 512;
 const IMAGE_DOWNSAMPLE_SIZE: u32 = 128;
 const ALLOWED_EXTENSIONS: [&str; 8] = ["bmp", "gif", "jpg", "jpeg", "png", "tga", "tiff", "webp"];
+const EXPORT_EXTENSIONS: [&str; 4] = ["jpg", "jpeg", "png", "webp"];
 
 pub struct BlurThing {
     img: Option<(PathBuf, DynamicImage)>,
@@ -108,8 +109,8 @@ impl Application for BlurThing {
                         .unwrap_or_default()
                         .as_secs();
                     if let Ok(Some(path)) = FileDialog::new()
-                        .add_filter("Image File", &["jpg", "jpeg", "png", "webp"])
-                        .set_filename(&format!("blurthing-{}.png", timestamp))
+                        .add_filter("Image File", &EXPORT_EXTENSIONS)
+                        .set_filename(&format!("blurthing-{}.jpg", timestamp))
                         .show_save_single_file()
                     {
                         if let Err(e) = img.clone().into_rgb8().save(path) {

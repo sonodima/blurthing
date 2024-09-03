@@ -1,11 +1,20 @@
 <div align="center" style="margin-top: 24px;">
     <img src="assets/demo.gif" alt="Application demo" width="80%" />
-    <div style="margin-top: 24px; margin-bottom: 24;">
+    <div style="margin-top: 24px; margin-bottom: 12;">
         <h1>BlurThing 🌄</h1>
         <span>Simple application for generating and customizing <a href="https://blurha.sh">
             BlurHashes</a> from<br/>images, with extensive controls for
             image manipulation.</span>
     </div>
+    <a href="https://github.com/sonodima/blurthing/releases/latest"> 
+        <img src="https://img.shields.io/github/v/release/sonodima/blurthing?style=for-the-badge&color=yellow"/>
+    </a>
+    <a href="https://github.com/sonodima/blurthing/actions/workflows/ci.yml"> 
+        <img src="https://img.shields.io/github/actions/workflow/status/sonodima/blurthing/ci.yml?style=for-the-badge&label=CI%20Status"/>
+    </a>
+    <a href="LICENSE"> 
+        <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge"/>
+    </a>
 </div>
 
 ## Usage
@@ -23,6 +32,30 @@ Some hotkeys are available for faster interaction:
 - <kbd>Ctrl</kbd> + <kbd>S</kbd> -> exports the current blurred image to a file
 - <kbd>Ctrl</kbd> + <kbd>Z</kbd> -> undo the last modification
 - <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> -> redo the last modification
+
+**Note**: On macOS, replace <kbd>Ctrl</kbd> with <kbd>Command</kbd>
+
+## Getting Started
+
+The easiest way to run BlurThing is by using the pre-built binaries available in the
+[releases](https://github.com/sonodima/blurthing/releases/latest) page.
+
+From there, you want to download the appropriate installer for your operating system
+and architecture.
+
+---
+
+**Note**: If you are using macOS, you may be greeted with a **Damaged Application** error
+when trying to run the BlurThing.
+
+This is because at the moment, the application is not signed with an Apple Developer
+certificate. To bypass this, you can open the terminal and run the following command:
+
+```sh
+xattr -d com.apple.quarantine /path/to/BlurThing.app
+```
+
+_(replacing `/path/to/BlurThing.app` with the actual path to the application)_
 
 ## Build and Run
 

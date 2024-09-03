@@ -139,7 +139,7 @@ fn windows_settings(workspace_dir: &Path) -> WindowsSettings {
 }
 
 fn wix_settings(workspace_dir: &Path) -> tauri_bundler::WixSettings {
-    let license_path = workspace_dir.join(LICENSE_FILE);
+    let license_path = workspace_dir.join("assets").join(LICENSE_FILE);
 
     tauri_bundler::WixSettings {
         license: Some(license_path),
