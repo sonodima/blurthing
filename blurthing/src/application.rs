@@ -11,7 +11,7 @@ use iced::{Application, Command, Event, Length, Subscription};
 use native_dialog::{FileDialog, MessageDialog, MessageType};
 
 use super::message::Message;
-use super::parameters::Parameters;
+use super::state::State;
 use super::styles;
 use super::undo_history::UndoHistory;
 use super::widgets::*;
@@ -25,8 +25,8 @@ pub struct BlurThing {
     img: Option<(PathBuf, DynamicImage)>,
     computed: Option<(String, DynamicImage)>,
 
-    params: Parameters,
-    history: UndoHistory<Parameters>,
+    state: State,
+    history: UndoHistory<State>,
 }
 
 impl Application for BlurThing {
@@ -40,7 +40,7 @@ impl Application for BlurThing {
             img: None,
             computed: None,
 
-            params: Default::default(),
+            state: Default::default(),
             history: UndoHistory::new(),
         };
 
@@ -154,44 +154,44 @@ impl Application for BlurThing {
             }
 
             Message::SaveParameters => {
-                self.history.push(self.params.clone());
+                self.history.push(self.state.clone());
             }
             Message::Undo => {
-                if let Some(params) = self.history.undo() {
-                    self.params = params.clone();
+                if let Some(state) = self.history.undo() {
+                    self.state = state.clone();
                     self.compute_and_apply_blurhash();
                 }
             }
             Message::Redo => {
-                if let Some(params) = self.history.redo() {
-                    self.params = params.clone();
+                if let Some(state) = self.history.redo() {
+                    self.state = state.clone();
                     self.compute_and_apply_blurhash();
                 }
             }
 
             Message::UpX(x) => {
-                self.params.components.0 = x;
+                self.state.components.0 = x;
                 self.compute_and_apply_blurhash();
             }
             Message::UpY(y) => {
-                self.params.components.1 = y;
+                self.state.components.1 = y;
                 self.compute_and_apply_blurhash();
             }
             Message::UpBlur(blur) => {
-                self.params.blur = blur;
+                self.state.blur = blur;
                 self.compute_and_apply_blurhash();
             }
 
             Message::UpHue(hue) => {
-                self.params.hue_rotate = hue;
+                self.state.hue_rotate = hue;
                 self.compute_and_apply_blurhash();
             }
             Message::UpBrightness(brightness) => {
-                self.params.brightness = brightness;
+                self.state.brightness = brightness;
                 self.compute_and_apply_blurhash();
             }
             Message::UpContrast(contrast) => {
-                self.params.contrast = contrast;
+                self.state.contrast = contrast;
                 self.compute_and_apply_blurhash();
             }
 
@@ -282,15 +282,15 @@ impl BlurThing {
 
         let buffer = img
             .1
-            .blur(self.params.blur as f32)
-            .huerotate(self.params.hue_rotate)
-            .adjust_contrast(self.params.contrast as f32)
-            .brighten(self.params.brightness * 2)
+            .blur(self.state.blur as f32)
+            .huerotate(self.state.hue_rotate)
+            .adjust_contrast(self.state.contrast as f32)
+            .brighten(self.state.brightness * 2)
             .to_rgba8()
             .to_vec();
 
         let (width, height) = img.1.dimensions();
-        let (x, y) = self.params.components;
+        let (x, y) = self.state.components;
         // Encode the blurhash and decode it to a preview image for display.
         let hash = blurhash::encode(x, y, width, height, &buffer)
             .map_err(|_| anyhow!("failed to compute the blurhash"))?;
@@ -321,10 +321,10 @@ impl BlurThing {
     }
 
     fn reset_settings(&mut self) {
-        self.params = Parameters::default();
+        self.state = State::default();
         self.history.reset();
         // Push the initial parameters to the history stack.
-        self.history.push(self.params.clone());
+        self.history.push(self.state.clone());
     }
 }
 
@@ -378,7 +378,7 @@ impl BlurThing {
                     .size(12),
             )
             .push(
-                Slider::new(1..=8, self.params.components.0, Message::UpX)
+                Slider::new(1..=8, self.state.components.0, Message::UpX)
                     .on_release(Message::SaveParameters),
             );
 
@@ -390,7 +390,7 @@ impl BlurThing {
                     .size(12),
             )
             .push(
-                Slider::new(1..=8, self.params.components.1, Message::UpY)
+                Slider::new(1..=8, self.state.components.1, Message::UpY)
                     .on_release(Message::SaveParameters),
             );
 
@@ -402,7 +402,7 @@ impl BlurThing {
                     .size(12),
             )
             .push(
-                Slider::new(0..=32, self.params.blur, Message::UpBlur)
+                Slider::new(0..=32, self.state.blur, Message::UpBlur)
                     .on_release(Message::SaveParameters),
             );
 
@@ -414,7 +414,7 @@ impl BlurThing {
                     .size(12),
             )
             .push(
-                Slider::new(-180..=180, self.params.hue_rotate, Message::UpHue)
+                Slider::new(-180..=180, self.state.hue_rotate, Message::UpHue)
                     .on_release(Message::SaveParameters),
             );
 
@@ -426,7 +426,7 @@ impl BlurThing {
                     .size(12),
             )
             .push(
-                Slider::new(-100..=100, self.params.brightness, Message::UpBrightness)
+                Slider::new(-100..=100, self.state.brightness, Message::UpBrightness)
                     .on_release(Message::SaveParameters),
             );
 
@@ -440,7 +440,7 @@ impl BlurThing {
                 .size(12),
             )
             .push(
-                Slider::new(-100..=100, self.params.contrast, Message::UpContrast)
+                Slider::new(-100..=100, self.state.contrast, Message::UpContrast)
                     .on_release(Message::SaveParameters),
             );
 

@@ -6,7 +6,7 @@ use application::{BlurThing, PREVIEW_SIZE};
 
 mod application;
 mod message;
-mod parameters;
+mod state;
 mod styles;
 mod undo_history;
 mod widgets;

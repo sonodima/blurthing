@@ -1,5 +1,5 @@
 #[derive(Debug, Clone)]
-pub struct Parameters {
+pub struct State {
     pub components: (u32, u32),
     pub blur: i32,
 
@@ -8,7 +8,7 @@ pub struct Parameters {
     pub contrast: i32,
 }
 
-impl Default for Parameters {
+impl Default for State {
     fn default() -> Self {
         Self {
             components: (4, 3),
