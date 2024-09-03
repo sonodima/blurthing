@@ -25,6 +25,17 @@
 2. Adjust the image manipulation parameters to your liking
 3. Copy the blur hash to the clipboard
 
+## How is this useful?
+
+BlurHashes are typically used in scenarios where you want to display a placeholder image while it is being loaded.
+
+If that is your use case, this application can be a quick way to generate a BlurHash for your images. _(for testing, or if you are lazy and didn't integrate the BlurHash generation in your backend)_
+
+However, BlurThing can be used to manipulate an input image and export a blurred version of it.
+With the right parameters you can create some cool f\*\*king abstract wallpapers that look like they came straight from the iPhone 19.
+
+BlurThing can be helpful, or it can be a fun toy. It's up to you.
+
 ## Hotkeys
 
 Some hotkeys are available for faster interaction:
