@@ -102,6 +102,7 @@ fn bundle_settings(workspace_dir: &Path) -> BundleSettings {
         copyright: Some(COPYRIGHT.to_string()),
         category: Some(CATEGORY),
         dmg: dmg_settings(workspace_dir),
+        macos: macos_settings(),
         windows: windows_settings(workspace_dir),
         ..Default::default()
     };
@@ -124,6 +125,13 @@ fn dmg_settings(workspace_dir: &Path) -> DmgSettings {
     };
 
     settings
+}
+
+fn macos_settings() -> tauri_bundler::MacOsSettings {
+    tauri_bundler::MacOsSettings {
+        hardened_runtime: false,
+        ..Default::default()
+    }
 }
 
 fn windows_settings(workspace_dir: &Path) -> WindowsSettings {
