@@ -47,11 +47,10 @@ and architecture.
 
 ---
 
-**Note**: If you are using macOS, you may be greeted with a **Damaged Application** error
-when trying to run the BlurThing.
+**Note**: If you are using macOS, you may be greeted with a _"BlurThing can't be opened"_
+message. This is due to the application currently not being signed.
 
-This is because at the moment, the application is not signed with an Apple Developer
-certificate. To bypass this, you can open the terminal and run the following command:
+To open it anyway, you can right-click on the application and select **Open**.
 
 ```sh
 xattr -d com.apple.quarantine /path/to/BlurThing.app
