@@ -12,9 +12,9 @@ use native_dialog::{FileDialog, MessageDialog, MessageType};
 
 use super::message::Message;
 use super::parameters::Parameters;
-use super::styles::Theme;
+use super::styles;
 use super::undo_history::UndoHistory;
-use crate::{styles, widgets::*};
+use super::widgets::*;
 
 pub const PREVIEW_SIZE: u32 = 512;
 const IMAGE_DOWNSAMPLE_SIZE: u32 = 128;
@@ -33,7 +33,7 @@ impl Application for BlurThing {
     type Executor = iced::executor::Default;
     type Flags = ();
     type Message = Message;
-    type Theme = Theme;
+    type Theme = styles::Theme;
 
     fn new(_flags: ()) -> (Self, Command<Self::Message>) {
         let mut instance = Self {
@@ -101,25 +101,41 @@ impl Application for BlurThing {
                 }
             }
             Message::ExportImage => {
-                if let Some((_, img)) = &self.computed {
-                    let timestamp = SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs();
-                    if let Ok(Some(path)) = FileDialog::new()
-                        .add_filter("Image File", &EXPORT_EXTENSIONS)
-                        .set_filename(&format!("blurthing-{}.jpg", timestamp))
-                        .show_save_single_file()
-                    {
-                        if let Err(e) = img.clone().into_rgb8().save(path) {
-                            eprintln!("image export failed: {}", e);
+                if self.img.is_none() {
+                    return Command::none();
+                }
+
+                let timestamp = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs();
+
+                if let Ok(Some(path)) = FileDialog::new()
+                    .add_filter("Image File", &EXPORT_EXTENSIONS)
+                    .set_filename(&format!("blurthing-{}.jpg", timestamp))
+                    .show_save_single_file()
+                {
+                    // Compute a new high-resolution image with the current parameters.
+                    match self.compute_blurhash(4196) {
+                        Ok((_, img)) => {
+                            if let Err(e) = img.clone().into_rgb8().save(path) {
+                                eprintln!("image export failed: {}", e);
+                                _ = MessageDialog::new()
+                                    .set_type(MessageType::Error)
+                                    .set_title("Image Export Error")
+                                    .set_text(&format!(
+                                        "failed to export image: {}",
+                                        e.to_string().to_lowercase()
+                                    ))
+                                    .show_alert();
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("failed to compute blurhash to export: {}", e);
                             _ = MessageDialog::new()
                                 .set_type(MessageType::Error)
-                                .set_title("Image Export Error")
-                                .set_text(&format!(
-                                    "failed to export image: {}",
-                                    e.to_string().to_lowercase()
-                                ))
+                                .set_title("Computation Error")
+                                .set_text(&format!("failed to compute blurhash: {}", e))
                                 .show_alert();
                         }
                     }
@@ -143,40 +159,40 @@ impl Application for BlurThing {
             Message::Undo => {
                 if let Some(params) = self.history.undo() {
                     self.params = params.clone();
-                    self.compute_blurhash_checked();
+                    self.compute_and_apply_blurhash();
                 }
             }
             Message::Redo => {
                 if let Some(params) = self.history.redo() {
                     self.params = params.clone();
-                    self.compute_blurhash_checked();
+                    self.compute_and_apply_blurhash();
                 }
             }
 
             Message::UpX(x) => {
                 self.params.components.0 = x;
-                self.compute_blurhash_checked();
+                self.compute_and_apply_blurhash();
             }
             Message::UpY(y) => {
                 self.params.components.1 = y;
-                self.compute_blurhash_checked();
+                self.compute_and_apply_blurhash();
             }
             Message::UpBlur(blur) => {
                 self.params.blur = blur;
-                self.compute_blurhash_checked();
+                self.compute_and_apply_blurhash();
             }
 
             Message::UpHue(hue) => {
                 self.params.hue_rotate = hue;
-                self.compute_blurhash_checked();
+                self.compute_and_apply_blurhash();
             }
             Message::UpBrightness(brightness) => {
                 self.params.brightness = brightness;
-                self.compute_blurhash_checked();
+                self.compute_and_apply_blurhash();
             }
             Message::UpContrast(contrast) => {
                 self.params.contrast = contrast;
-                self.compute_blurhash_checked();
+                self.compute_and_apply_blurhash();
             }
 
             Message::NoOp => {}
@@ -217,9 +233,9 @@ impl Application for BlurThing {
     }
 }
 
-//
+///////////////////////////////////////////////
 // Main Logic
-//
+///////////////////////////////////////////////
 
 impl BlurThing {
     fn handle_hotkey(
@@ -254,10 +270,11 @@ impl BlurThing {
         // Store the image and reset the parameters to their defaults.
         self.img = Some((path, resized));
         self.reset_settings();
-        self.compute_blurhash()
+        self.computed = Some(self.compute_blurhash(PREVIEW_SIZE)?);
+        Ok(())
     }
 
-    fn compute_blurhash(&mut self) -> Result<()> {
+    fn compute_blurhash(&mut self, size: u32) -> Result<(String, DynamicImage)> {
         let img = self
             .img
             .as_ref()
@@ -277,27 +294,29 @@ impl BlurThing {
         // Encode the blurhash and decode it to a preview image for display.
         let hash = blurhash::encode(x, y, width, height, &buffer)
             .map_err(|_| anyhow!("failed to compute the blurhash"))?;
-        let decoded = blurhash::decode(&hash, PREVIEW_SIZE, PREVIEW_SIZE, 1.0)
+        let decoded = blurhash::decode(&hash, size, size, 1.0)
             .map_err(|_| anyhow!("failed to decode the computed blurhash"))?;
-        let preview = RgbaImage::from_vec(PREVIEW_SIZE, PREVIEW_SIZE, decoded)
+        let preview = RgbaImage::from_vec(size, size, decoded)
             .ok_or_else(|| anyhow!("failed to create preview image from decoded buffer"))?;
 
-        self.computed = Some((hash, DynamicImage::ImageRgba8(preview)));
-        Ok(())
+        Ok((hash, DynamicImage::ImageRgba8(preview)))
     }
 
-    fn compute_blurhash_checked(&mut self) {
+    fn compute_and_apply_blurhash(&mut self) {
         if self.img.is_none() {
             return;
         }
 
-        if let Err(e) = self.compute_blurhash() {
-            eprintln!("failed to compute blurhash: {}", e);
-            _ = MessageDialog::new()
-                .set_type(MessageType::Error)
-                .set_title("Computation Error")
-                .set_text(&format!("failed to compute blurhash: {}", e))
-                .show_alert();
+        match self.compute_blurhash(PREVIEW_SIZE) {
+            Ok(hash) => self.computed = Some(hash),
+            Err(e) => {
+                eprintln!("failed to compute blurhash: {}", e);
+                _ = MessageDialog::new()
+                    .set_type(MessageType::Error)
+                    .set_title("Computation Error")
+                    .set_text(&format!("failed to compute blurhash: {}", e))
+                    .show_alert();
+            }
         }
     }
 
@@ -309,9 +328,9 @@ impl BlurThing {
     }
 }
 
-//
+///////////////////////////////////////////////
 // UI Components
-//
+///////////////////////////////////////////////
 
 impl BlurThing {
     fn preview(&self) -> Element<Message> {
