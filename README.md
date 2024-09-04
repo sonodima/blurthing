@@ -15,8 +15,9 @@
     <a href="LICENSE"> 
         <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge"/>
     </a>
+    <br/>
     <a href="https://github.com/iced-rs/iced">
-        <img alt="Made with Iced" src="assets/made-with-iced.svg" height="28px" />
+        <img alt="Made with Iced" src="assets/made-with-iced.svg" height="36px" />
     </a>
 </div>
 
