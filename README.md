@@ -40,6 +40,25 @@ With the right parameters you can create some cool f\*\*king abstract wallpapers
 
 BlurThing can be helpful, or it can be a fun toy. It's up to you.
 
+## Getting Started
+
+The easiest way to run BlurThing is by using the pre-built binaries available in the
+[releases](https://github.com/sonodima/blurthing/releases/latest) page.
+
+From there, you want to download the appropriate installer for your operating system
+and architecture.
+
+| ![Windows](https://img.shields.io/badge/windows-1f4c7a?style=for-the-badge)                                                                       | ![macOS](https://img.shields.io/badge/macos-1f4c7a?style=for-the-badge)                                                                     | ![Linux](https://img.shields.io/badge/linux-1f4c7a?style=for-the-badge)        | ![Web](https://img.shields.io/badge/web-1f4c7a?style=for-the-badge) |
+| :------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------- | :------------------------------------------------------------------ |
+| [x86_64](releases/latest/download/blurthing-x86_64-pc-windows-msvc.msi) - [arm64](releases/latest/download/blurthing-aarch64-pc-windows-msvc.msi) | [arm64](releases/latest/download/blurthing-aarch64-apple-darwin.dmg) - [x86_64](releases/latest/download/blurthing-x86_64-apple-darwin.dmg) | [x86_64](releases/latest/download/blurthing-x86_64-unknown-linux-gnu.AppImage) | [WebAssembly](https://sonodima.github.io/blurthing)                 |
+
+---
+
+**Note**: If you are using macOS, you may be greeted with a _"BlurThing can't be opened"_
+message. This is due to the application currently not being signed.
+
+To open it anyway, you can right-click on the application and select **Open**.
+
 ## Hotkeys
 
 Some hotkeys are available for faster interaction:
@@ -51,21 +70,6 @@ Some hotkeys are available for faster interaction:
 - <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> -> redo the last modification
 
 **Note**: On macOS, replace <kbd>Ctrl</kbd> with <kbd>Command</kbd>
-
-## Getting Started
-
-The easiest way to run BlurThing is by using the pre-built binaries available in the
-[releases](https://github.com/sonodima/blurthing/releases/latest) page.
-
-From there, you want to download the appropriate installer for your operating system
-and architecture.
-
----
-
-**Note**: If you are using macOS, you may be greeted with a _"BlurThing can't be opened"_
-message. This is due to the application currently not being signed.
-
-To open it anyway, you can right-click on the application and select **Open**.
 
 ## Build and Run
 
