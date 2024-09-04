@@ -86,4 +86,4 @@ cargo xtask bundle --release
 
 - [ ] Add new image manipulation filters (e.g. rotation, flip, waves???, distort???)
 - [ ] Improve the export UX, allowing the user to choose the output resolution
-- [ ] Implement an _"I feel lucky"_ button that loads a random image from the internet _(what could go wrong anyway?)_
+- [x] Implement an _"I feel lucky"_ button that loads a random image from the internet _(what could go wrong anyway?)_
