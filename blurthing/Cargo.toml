@@ -16,4 +16,5 @@ iced = { version = "0.12", features = ["image"] }
 image = "0.25"
 log = { workspace = true }
 native-dialog = "0.7"
+reqwest = { version = "0.12", features = ["blocking"] }
 webbrowser = "1.0"

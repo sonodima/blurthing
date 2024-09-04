@@ -9,6 +9,7 @@ mod message;
 mod state;
 mod styles;
 mod undo_history;
+mod utils;
 mod widgets;
 
 pub fn main() -> iced::Result {

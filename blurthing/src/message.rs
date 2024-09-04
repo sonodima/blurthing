@@ -1,24 +1,36 @@
 use std::path::PathBuf;
 
-#[derive(Debug, Clone)]
+use ::image::DynamicImage;
+use anyhow::Result;
+
+#[derive(Debug)]
 pub enum Message {
-    NoOp,
+    Interaction(Interaction),
 
-    SelectImage,
     FileDropped(PathBuf),
-    CopyHashToClipboard,
-    ExportImage,
-    OpenProjectRepo,
+    ImageDownloaded(Result<DynamicImage>),
+}
 
-    SaveParameters,
+#[derive(Debug, Clone)]
+pub enum Interaction {
     Undo,
     Redo,
 
+    SelectImage,
+    ExportImage,
+
+    CopyToClipboard,
+    ImFeelingLucky,
+    OpenProjectRepo,
+
+    SaveParameters,
     UpX(u32),
     UpY(u32),
     UpBlur(i32),
-
     UpHue(i32),
     UpBrightness(i32),
     UpContrast(i32),
+
+    // Command to do nothing, useful to enable TextInputs even when read only.
+    Ignored,
 }
