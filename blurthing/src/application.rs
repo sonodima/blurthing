@@ -69,7 +69,7 @@ impl Application for BlurThing {
                     .to_lowercase();
 
                 if ALLOWED_EXTENSIONS.contains(&extension.as_str()) {
-                    if let Err(e) = self.try_load_image(path) {
+                    if let Err(e) = self.load_image_file(path) {
                         eprintln!("image load failed: {}", e);
                         _ = MessageDialog::new()
                             .set_type(MessageType::Error)
@@ -90,18 +90,7 @@ impl Application for BlurThing {
                 self.is_downloading_image = false;
 
                 match result {
-                    Ok(img) => {
-                        // Downsample the image to a smaller size for faster processing.
-                        let resized = img.resize_exact(
-                            IMAGE_DOWNSAMPLE_SIZE,
-                            IMAGE_DOWNSAMPLE_SIZE,
-                            FilterType::Lanczos3,
-                        );
-
-                        self.img = Some(resized);
-                        self.reset_settings();
-                        self.computed = Some(self.compute_blurhash(PREVIEW_SIZE).unwrap());
-                    }
+                    Ok(img) => self.load_image(img),
                     Err(e) => {
                         eprintln!("failed to download the image: {}", e);
                         _ = MessageDialog::new()
@@ -175,7 +164,7 @@ impl BlurThing {
                     .add_filter("Image File", &ALLOWED_EXTENSIONS)
                     .show_open_single_file()
                 {
-                    if let Err(e) = self.try_load_image(path) {
+                    if let Err(e) = self.load_image_file(path) {
                         eprintln!("image load failed: {}", e);
                         _ = MessageDialog::new()
                             .set_type(MessageType::Error)
@@ -309,11 +298,15 @@ impl BlurThing {
         }
     }
 
-    fn try_load_image(&mut self, path: PathBuf) -> Result<()> {
+    fn load_image_file(&mut self, path: PathBuf) -> Result<()> {
         let loaded = ::image::open(&path).map_err(|e| anyhow!(e.to_string().to_lowercase()))?;
+        self.load_image(loaded);
+        Ok(())
+    }
 
+    fn load_image(&mut self, img: DynamicImage) {
         // Downsample the image to a smaller size for faster processing.
-        let resized = loaded.resize_exact(
+        let resized = img.resize_exact(
             IMAGE_DOWNSAMPLE_SIZE,
             IMAGE_DOWNSAMPLE_SIZE,
             FilterType::Lanczos3,
@@ -322,8 +315,7 @@ impl BlurThing {
         // Store the image and reset the parameters to their defaults.
         self.img = Some(resized);
         self.reset_settings();
-        self.computed = Some(self.compute_blurhash(PREVIEW_SIZE)?);
-        Ok(())
+        self.computed = Some(self.compute_blurhash(PREVIEW_SIZE).unwrap());
     }
 
     fn compute_blurhash(&mut self, size: u32) -> Result<(String, DynamicImage)> {
