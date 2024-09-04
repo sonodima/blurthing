@@ -1,6 +1,6 @@
 [package]
 name = "blurthing"
-version = "1.3.0"
+version = "1.3.1"
 edition = "2021"
 authors = ["Tommaso Dimatore <sonodimaa@icloud.com>"]
 description = "Simplify the process of computing BlurHashes from images."
