@@ -1,7 +1,7 @@
 <div align="center" style="margin-top: 24px;">
     <div>
         <h1>BlurThing 🌄</h1>
-        <span>Simple application for generating and customizing <a href="https://blurha.sh">
+        <span>Cross-platform application for generating and customizing <a href="https://blurha.sh">
             BlurHashes</a> from<br/>images, with extensive controls for
             image manipulation.</span>
     </div>
@@ -15,15 +15,18 @@
     <a href="LICENSE"> 
         <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge"/>
     </a>
-    <br/><br/>
-    <img src="assets/demo.gif" alt="Application demo" width="80%" />
+    <a href="https://github.com/iced-rs/iced">
+        <img alt="Made with Iced" src="assets/made-with-iced.svg" height="28px" />
+    </a>
 </div>
 
-## Usage
+## Basic Usage
 
 1. Open an image file with the open file dialog
 2. Adjust the image manipulation parameters to your liking
-3. Copy the blur hash to the clipboard
+3. Copy the blur hash to the clipboard, or alternatively export the blurred rastered image
+
+![Application Demo](assets/demo.gif)
 
 ## How is this useful?
 

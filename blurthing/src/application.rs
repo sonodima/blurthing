@@ -466,9 +466,9 @@ impl BlurThing {
                     .on_release(Interaction::SaveParameters),
             );
 
-        let tools = Row::new()
+        let rotate = Row::new()
             .push(
-                Column::new().push(Text::new("Rotation")).push(
+                Column::new().push(Text::new("Rotate")).push(
                     Text::new("Rotate the input image by 90 degrees")
                         .style(styles::Text::Subtle)
                         .size(12),
@@ -533,7 +533,7 @@ impl BlurThing {
         Column::new()
             .push(x_components)
             .push(y_components)
-            .push(tools)
+            .push(rotate)
             .push(smoothness)
             .push(hue_rotation)
             .push(brightness)
