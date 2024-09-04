@@ -48,10 +48,6 @@ The easiest way to run BlurThing is by using the pre-built binaries available in
 From there, you want to download the appropriate installer for your operating system
 and architecture.
 
-| ![Windows](https://img.shields.io/badge/windows-1f4c7a?style=for-the-badge)                                                                       | ![macOS](https://img.shields.io/badge/macos-1f4c7a?style=for-the-badge)                                                                     | ![Linux](https://img.shields.io/badge/linux-1f4c7a?style=for-the-badge)        | ![Web](https://img.shields.io/badge/web-1f4c7a?style=for-the-badge) |
-| :------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------- | :------------------------------------------------------------------ |
-| [x86_64](releases/latest/download/blurthing-x86_64-pc-windows-msvc.msi) - [arm64](releases/latest/download/blurthing-aarch64-pc-windows-msvc.msi) | [arm64](releases/latest/download/blurthing-aarch64-apple-darwin.dmg) - [x86_64](releases/latest/download/blurthing-x86_64-apple-darwin.dmg) | [x86_64](releases/latest/download/blurthing-x86_64-unknown-linux-gnu.AppImage) | [WebAssembly](https://sonodima.github.io/blurthing)                 |
-
 ---
 
 **Note**: If you are using macOS, you may be greeted with a _"BlurThing can't be opened"_
