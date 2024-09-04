@@ -250,6 +250,16 @@ impl BlurThing {
                 self.state.components.1 = y;
                 self.compute_and_apply_blurhash();
             }
+            Interaction::RotateCW => {
+                self.state.rotation = (self.state.rotation + 1) % 4;
+                self.compute_and_apply_blurhash();
+                self.history.push(self.state.clone());
+            }
+            Interaction::RotateCCW => {
+                self.state.rotation = (self.state.rotation + 3) % 4;
+                self.compute_and_apply_blurhash();
+                self.history.push(self.state.clone());
+            }
             Interaction::UpBlur(blur) => {
                 self.state.blur = blur;
                 self.compute_and_apply_blurhash();
@@ -324,7 +334,14 @@ impl BlurThing {
             .as_ref()
             .ok_or_else(|| anyhow!("source image is not available"))?;
 
-        let buffer = img
+        let rotated = match self.state.rotation {
+            1 => &img.rotate90(),
+            2 => &img.rotate180(),
+            3 => &img.rotate270(),
+            _ => img,
+        };
+
+        let buffer = rotated
             .blur(self.state.blur as f32)
             .huerotate(self.state.hue_rotate)
             .adjust_contrast(self.state.contrast as f32)
@@ -332,7 +349,7 @@ impl BlurThing {
             .to_rgba8()
             .to_vec();
 
-        let (width, height) = img.dimensions();
+        let (width, height) = rotated.dimensions();
         let (x, y) = self.state.components;
         // Encode the blurhash and decode it to a preview image for display.
         let hash = blurhash::encode(x, y, width, height, &buffer)
@@ -449,6 +466,20 @@ impl BlurThing {
                     .on_release(Interaction::SaveParameters),
             );
 
+        let tools = Row::new()
+            .push(
+                Column::new().push(Text::new("Rotation")).push(
+                    Text::new("Rotate the input image by 90 degrees")
+                        .style(styles::Text::Subtle)
+                        .size(12),
+                ),
+            )
+            .push(Space::with_width(Length::Fill))
+            .push(Button::new("↻").on_press(Interaction::RotateCW))
+            .push(Button::new("↺").on_press(Interaction::RotateCCW))
+            .spacing(8)
+            .padding([0, 0, 4, 0]);
+
         let smoothness = Column::new()
             .push(Text::new("Smoothness"))
             .push(
@@ -495,13 +526,14 @@ impl BlurThing {
                 .size(12),
             )
             .push(
-                Slider::new(-100..=100, self.state.contrast, Interaction::UpContrast)
+                Slider::new(-40..=220, self.state.contrast, Interaction::UpContrast)
                     .on_release(Interaction::SaveParameters),
             );
 
         Column::new()
             .push(x_components)
             .push(y_components)
+            .push(tools)
             .push(smoothness)
             .push(hue_rotation)
             .push(brightness)

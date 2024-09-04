@@ -26,6 +26,8 @@ pub enum Interaction {
     SaveParameters,
     UpX(u32),
     UpY(u32),
+    RotateCW,
+    RotateCCW,
     UpBlur(i32),
     UpHue(i32),
     UpBrightness(i32),
