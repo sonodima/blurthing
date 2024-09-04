@@ -409,12 +409,12 @@ impl BlurThing {
 
         Row::new()
             .push(
-                MouseArea::new(
-                    Column::new()
-                        .push(Text::new(self.title()).size(24))
-                        .push(Text::new("by sonodima").size(14)),
-                )
-                .on_press(Interaction::OpenProjectRepo),
+                Column::new().push(Text::new(self.title()).size(24)).push(
+                    Button::new(Text::new("github.com / sonodima / blurthing").size(12))
+                        .padding(0)
+                        .style(styles::Button::Link)
+                        .on_press(Interaction::OpenProjectRepo),
+                ),
             )
             .push(Space::with_width(Length::Fill))
             .push(feeling_lucky)

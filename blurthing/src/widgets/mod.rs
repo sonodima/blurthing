@@ -7,7 +7,6 @@ pub type Element<'a, Message> = iced::Element<'a, Message, Theme>;
 pub type Container<'a, Message> = iced::widget::Container<'a, Message, Theme>;
 pub type Column<'a, Message> = iced::widget::Column<'a, Message, Theme>;
 pub type Row<'a, Message> = iced::widget::Row<'a, Message, Theme>;
-pub type MouseArea<'a, Message> = iced::widget::MouseArea<'a, Message, Theme>;
 pub type Scrollable<'a, Message> = iced::widget::Scrollable<'a, Message, Theme>;
 
 pub type Button<'a, Message> = iced::widget::Button<'a, Message, Theme>;
