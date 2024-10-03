@@ -110,6 +110,7 @@ fn macos_settings(workspace_dir: &Path) -> MacOsSettings {
     let license_path = workspace_dir.join("assets").join(LICENSE_FILE);
 
     MacOsSettings {
+        minimum_system_version: Some("10.12".into()), // MACOSX_DEPLOYMENT_TARGET - blurthing/build.rs
         license: Some(license_path.to_string_lossy().into()),
         signing_identity: Some("-".into()), // ad-hoc signing
         ..Default::default()
